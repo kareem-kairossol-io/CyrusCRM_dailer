@@ -1,171 +1,206 @@
-# Design System Spec — CRM Login Screen (RTL / Arabic Site)
+# CRM Mobile App — Screens & Theme Spec
 
-Design specification for a CRM login screen, adapted for a **right-to-left (RTL) Arabic interface** using a **Kufi Arabic font**. This document is written in English so any model can follow it precisely — but the actual site content, labels, and copy should be in Arabic.
+This document is written for an AI coding model to implement. Follow every instruction literally and exactly. Do not improvise colors, spacing, or component structure that isn't listed here — if something isn't specified, pick the closest matching value that IS specified elsewhere in this document.
+
+The app is React Native + Expo Router (`expo-router`), with native bottom tabs (`expo-router/unstable-native-tabs`). It already supports light/dark mode via `useColorScheme()` and a `Colors` object in `@/constants/theme`.
+
+Stack: TypeScript, React Native `StyleSheet`, Expo Router file-based routing.
 
 ---
 
-## 1. Direction & Layout Mirroring
+## 0. Files that already exist (functional, unstyled — DO NOT change their logic, only their styling)
 
-- Overall direction: `dir="rtl"`, all text `text-align: right`.
-- The whole layout mirrors: the dark hero panel (originally left) moves to the **right side**, the light login/form panel (originally right) moves to the **left side**.
-- Any directional icon (arrows, "continue" chevrons) must be flipped horizontally (`transform: scaleX(-1)` or swapped for a left-pointing icon), since "forward" in RTL points left.
-- Numbers and stats (12K+, 98%, 99.9%) stay in standard LTR numerals embedded inside the RTL text — do not reverse digit order.
-- Icons inside inputs, checkboxes next to labels, avatars next to quotes — all mirror their side (right↔left swapped from the original screenshot).
-
-## 2. Typography
-
-- **Font family:** a modern Arabic Kufi typeface — prefer `"Noto Kufi Arabic"`, `"Cairo"`, or `"IBM Plex Sans Arabic"` as fallback, then generic `sans-serif`.
-- No extra letter-spacing — Kufi relies on clean, squared letterforms rather than spacing for legibility.
-- Weight scale:
-  - Hero H1 (large marketing headline): **Bold/800**, ~40–48px, `line-height: 1.15`
-  - Section headings (e.g. "Welcome back"): **Bold/700**, ~28px
-  - Body / descriptive text: **Regular/400**, medium gray, ~15px
-  - Field labels: **Medium/600**, small (~11–12px), muted gray, sits directly above each input
-  - Stat numbers: **Bold/800**, large (~26–30px)
-
-## 3. Color Palette
-
-| Use | Color |
+| File | Purpose |
 |---|---|
-| Dark hero panel background | near-black `#0B0B0C`–`#101012`, with a subtle radial amber glow (~8% opacity) in one corner |
-| Form panel background | **off-white**, not pure white — e.g. `#F7F6F3` or `#FAF9F7` |
-| Primary / accent color | warm orange `#E8862B`–`#F0902E`, used as a gradient on buttons (`linear-gradient(90deg, #E8862B, #F2A23D)`) |
-| Cards inside the dark panel | near-transparent white overlay `rgba(255,255,255,0.04)`, no visible border, no shadow |
-| Text on dark background | white `#FFFFFF` primary, light gray `#C9C9CC` secondary |
-| Text on light background | near-black `#1A1A1A` primary, gray `#6B6B70` secondary |
-| Input borders | very light gray `#E4E2DE` / `#EAEAE7`, single 1px line, **no shadow** |
-| Input background | pure white `#FFFFFF` (contrasts gently against the off-white panel) |
+| `components/app-tabs.tsx` | Bottom tab bar: Home, Calls |
+| `app/(tabs)/index.tsx` | Home screen (exists in project, needs styling per Section 4) |
+| `app/(tabs)/calls.tsx` | Calls list screen — already wired to `CallLogService.getCalls()` |
+| `app/call-actions/[id].tsx` | Call detail/actions screen — already wired to `CallLogService.getCallById()` / `deleteCall()` |
+| `services/CallLogService.ts` | Data source. Do not modify. |
 
-## 4. Core Principle: "Light, Simple, No Heavy Visual Weight"
+Your job: apply the theme/styles below to these files, and build out the Home screen content. Do not change any data-fetching logic, state logic, or navigation logic — only JSX structure needed for new visual elements (cards, badges, icons) and `StyleSheet` values.
 
-- **No strong shadows anywhere.** Where a shadow exists, it's barely visible (`box-shadow: 0 1px 2px rgba(0,0,0,0.04)`), used only for the faintest separation — never for depth or elevation drama.
-- **Borders are simple** — a single thin line, light color, no gradients or double borders.
-- Separation between elements relies on **subtle background tone shifts** (off-white vs. white, or 4% white overlay on dark) rather than heavy borders or shadows.
-- Medium-to-large rounded corners (`border-radius: 12–20px`) across cards, inputs, and buttons.
+---
 
-## 5. Cards
+## 1. Theme Source of Truth
 
-### a. Small Stat Cards (inside the dark hero panel)
-```
-background: rgba(255,255,255,0.04)
-border: none  /* or 1px solid rgba(255,255,255,0.06) if a touch more separation is needed */
-border-radius: 16px
-padding: 20px
-box-shadow: none
-```
-Content: small orange icon at top → large bold white number → small gray label beneath. Three cards sit in a horizontal row; in RTL the row still reads right-to-left in logical order.
+The color palette, typography scale, radius scale, and shadow rules below are taken directly from the company's existing CRM web design system and must be reused as-is for brand consistency, just applied to React Native instead of CSS.
 
-### b. Testimonial / Quote Card
-```
-background: rgba(255,255,255,0.04)
-border-radius: 20px
-padding: 24px
-box-shadow: none
-```
-Content: circular avatar (single letter on orange background) placed on the **right** side of the quote in RTL, quote text in regular weight, name + title below in lighter gray.
+**Do NOT apply right-to-left (RTL) mirroring, Arabic font, or Arabic copy to this app.** This mobile app is LTR / English UI. The RTL rules in the original web spec do not apply here — ignore them entirely. Only the colors, type scale, spacing, radius, and shadow rules carry over.
 
-### c. Login/Form "Card"
-No separate card container needed — it's built directly on the off-white panel background; label + input pairs stack with no extra wrapping box.
+### 1a. Color Palette
 
-## 6. Inputs
+Define these in `constants/theme.ts` inside the existing `Colors` object, under `light` and `dark`:
 
-```
-background: #FFFFFF
-border: 1px solid #E7E5E1
-border-radius: 12px
-padding: 14px 16px
-box-shadow: none
-```
-- Small gray icon inside the input sits on the **right** side in RTL (mirrored from the original's left-side icon).
-- On `:focus`: border shifts to the primary orange `border-color: #E8862B` plus a faint halo `box-shadow: 0 0 0 3px rgba(232,134,43,0.12)` — this is the *only* shadow allowed, and it's purely for interaction feedback.
-- Password field's show/hide "eye" icon sits on the **left** side inside the input in RTL.
-- The label sits directly above the input, right-aligned.
-- The "Forgot password?" link sits on the **left** end of the same row as the label (mirrored from the original), styled in the accent orange.
+| Token | Light mode value | Dark mode value |
+|---|---|---|
+| `background` | `#FAF9F7` (off-white) | `#0B0B0C` (near-black) |
+| `backgroundElement` (cards, rows) | `#FFFFFF` | `rgba(255,255,255,0.04)` |
+| `text` (primary) | `#1A1A1A` | `#FFFFFF` |
+| `textSecondary` | `#6B6B70` | `#C9C9CC` |
+| `border` | `#E7E5E1` | `rgba(255,255,255,0.08)` |
+| `accent` (primary/orange) | `#E8862B` | `#E8862B` |
+| `accentGradientStart` | `#F2A23D` | `#F2A23D` |
+| `accentGradientEnd` | `#E8862B` | `#E8862B` |
+| `success` | `#2E9E5B` | `#3DBE73` |
+| `danger` | `#D64545` | `#E5605F` |
+| `badgeBackground` | `rgba(232,134,43,0.10)` | `rgba(255,255,255,0.06)` |
 
-## 7. Buttons
+Accent orange (`#E8862B`) never changes between light/dark — it's the one fixed brand color.
 
-### Primary CTA
-```
-background: linear-gradient(90deg, #F2A23D, #E8862B)
-color: #FFFFFF
-border: none
-border-radius: 14px
-padding: 16px 20px
-font-weight: 700
-box-shadow: 0 4px 14px rgba(232,134,43,0.25)  /* faint colored shadow under the button only — not a general pattern */
-```
-- The directional arrow inside the button sits at the far **left** of the button and points **left**, since forward motion in RTL points left (mirrored from the original's right-pointing arrow).
-- Hover state: slightly stronger shadow or ~5% lighter gradient — no drastic change.
+### 1b. Typography
 
-### Secondary Buttons (e.g. header "Buy now" style)
-```
-background: transparent or near-transparent white
-border: 1px solid light gray
-border-radius: 10px
-padding: 8px 16px
-box-shadow: none
-```
+Use the system font (no custom font family needed for this mobile app — that was Arabic-Kufi-specific to the web login, not applicable here).
 
-## 8. Badges / Pills
+| Role | Size | Weight | Color token |
+|---|---|---|---|
+| Screen title (e.g. "Calls") | 28 | 700 | `text` |
+| Section heading | 18 | 700 | `text` |
+| Body / list primary (contact name) | 16 | 600 | `text` |
+| Body secondary (meta line) | 13 | 400 | `textSecondary` |
+| Small label / caption | 12 | 500 | `textSecondary` |
+| Stat number | 26 | 800 | `text` |
 
-```
-background: rgba(255,255,255,0.06)  /* on dark background */
-border-radius: 999px
-padding: 6px 14px
-font-size: 12px
-color: #E8862B  /* or white text with a small orange dot */
-```
-Small orange dot before the label text — in RTL this visually lands on the right side of the text.
+### 1c. Radius Scale
 
-## 9. Checkbox
+- Small elements (badges, chips): `999` (full pill)
+- Buttons, inputs: `12`
+- Cards, rows-as-cards: `16`
+- Large containers / bottom sheets: `20`
 
-```
-size: 18x18
-border-radius: 4px
-border: 1px solid #D8D6D1
-checked-background: #E8862B
-```
-Sits on the **right** side of its associated label ("Keep me signed in") in RTL.
+### 1d. Shadow Rules — exactly 3 places allowed, nowhere else
 
-## 10. Tables — Same Design Language
+1. **Primary button** — faint colored shadow only:
+   `shadowColor: '#E8862B', shadowOpacity: 0.25, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }` (Android: `elevation: 3`)
+2. **Floating/modal elements** (e.g. delete confirmation sheet, if custom-built instead of native `Alert`):
+   `shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }`
+3. Nothing else. List rows, cards, tab bar, inputs = **no shadow**. Separation comes only from `background` vs `backgroundElement` contrast and the thin `border` token, never from shadow.
 
-Same "no shadow, simple border" principle:
-```
-table background: #FFFFFF
-header row background: #F7F6F3 (matches the light panel background)
-header text: dark gray, small bold, right-aligned
-row border: 1px solid #EFEDE9 (bottom divider only, no vertical borders)
-row hover: background rgba(232,134,43,0.04)
-outer container border-radius: 16px
-box-shadow: none
-cell padding: 12px 16px
-```
-- Numeric columns (dates, amounts) stay LTR within the cell; the cell itself is right-aligned unless it's a purely numeric column, in which case left-aligning the number improves readability.
-- Status badges inside table cells follow the same Pill style as Section 8.
+### 1e. Spacing
 
-## 11. Shadow Rules — Golden Rule Summary
+Use an 4/8/12/16/20/24 spacing scale. Screen horizontal padding = `16`. Vertical gap between list rows = `0` (use a 1px `border` bottom divider instead, like the web spec's table rows). Gap between stacked cards/sections = `16`.
 
-Use shadow in **exactly 3 places**, always very light:
-1. Input focus state (faint colored halo)
-2. Primary button (faint colored shadow beneath, for a "clickable" cue)
-3. True floating elements like dropdowns/modals (`0 8px 24px rgba(0,0,0,0.08)`)
+---
 
-Everything else (cards, regular inputs, tables, header) = **no shadow at all**. Rely only on background contrast and thin borders.
+## 2. Components to Build
 
-## 12. Cheat Sheet
+Build these as reusable components under `components/`. Each spec below lists props, states, and exact styling.
 
-| Element | Background | Border | Shadow | Radius |
-|---|---|---|---|---|
-| Hero panel | near-black + subtle glow | — | — | — |
-| Form panel | off-white | — | — | — |
-| Stat/Testimonial card | 4% white overlay (on dark) | none / very faint | none | 16–20px |
-| Input | white | 1px light gray | none (except focus) | 12px |
-| Primary button | orange gradient | none | faint colored | 14px |
-| Badge/Pill | translucent light | none | none | 999px |
-| Table | white | bottom divider only | none | 16px (container) |
+### 2a. `StatCard` (`components/stat-card.tsx`)
+Used on Home for at-a-glance numbers (e.g. "Calls today", "Missed calls", "Avg. duration").
 
-## 13. Note on Language
+- Props: `icon` (optional), `value: string | number`, `label: string`
+- Background: `backgroundElement` token
+- Radius: `16`
+- Padding: `20`
+- No border in light mode; `1px solid border` token in dark mode
+- No shadow
+- Layout: icon (small, `accent` colored) at top, `value` below it using the "Stat number" type role, `label` below that using "Small label" type role
+- Three `StatCard`s sit in a horizontal row with `12` gap between them, each taking equal width (`flex: 1`)
 
-- All copy, labels, and content on the site should be written in **Arabic**.
-- The specification above (colors, spacing, borders, shadows) applies regardless of content language.
-- Use a genuine Kufi Arabic web font (`Noto Kufi Arabic` / `Cairo`) — don't fall back to a Latin-only font stack for Arabic text.
+### 2b. `CallRow` (`components/call-row.tsx`)
+Used in the Calls list (replaces the current inline `renderItem` in `app/(tabs)/calls.tsx` — extract it into this component, same props/behavior, just move the JSX+styles here and import it).
+
+- Props: `call: CallRecord`, `onPress: () => void`
+- Row layout: horizontal, `paddingHorizontal: 16`, `paddingVertical: 12`, bottom `border` divider (`1px`, `border` token), no radius (flat list row, not a card)
+- Left side: a small circular avatar, 40x40, `borderRadius: 20`, background = `badgeBackground`, containing the first letter of `contactName` (or a phone icon if no name) in `accent` color, bold
+- Middle (flex:1, marginLeft 12): contact name (Body/primary role) on top, meta line below it: `direction` icon + `status` badge (see `StatusBadge` below) + formatted date (Body/secondary role), all in one row with small gaps
+- Right side: call duration (Small label role) and a direction arrow icon:
+  - `direction === 'OUTGOING'` → arrow pointing up-right, `accent` color
+  - `direction === 'INCOMING'` and `status === 'ANSWERED'` → arrow pointing down-left, `success` color
+  - `status === 'NO_ANSWER'` → arrow pointing down-left, `danger` color
+- Pressed state: background flashes to `rgba(232,134,43,0.04)` (same hover tint as the web table rows)
+
+### 2c. `StatusBadge` (`components/status-badge.tsx`)
+- Props: `status: 'ANSWERED' | 'NO_ANSWER'`
+- Pill shape, radius `999`, padding `4px 10px`, font size 11, weight 600
+- `ANSWERED`: background `rgba(46,158,91,0.12)`, text `success` token
+- `NO_ANSWER`: background `rgba(214,69,69,0.12)`, text `danger` token
+
+### 2d. `PrimaryButton` (`components/primary-button.tsx`)
+Used for "Call back" on the Call Actions screen and any other primary action.
+- Background: linear gradient `accentGradientStart` → `accentGradientEnd`, left-to-right (use `expo-linear-gradient`, already a common Expo dependency — add it if not present)
+- Text: white, weight 700, size 16
+- Radius: `14`
+- Padding: `16` vertical, `20` horizontal
+- Shadow: see Section 1d rule #1
+- Full width within its container
+- Pressed state: reduce opacity to `0.9`, no other change
+
+### 2e. `SecondaryButton` (`components/secondary-button.tsx`)
+Used for "Delete call" and "Play recording" on Call Actions.
+- Background: `backgroundElement` token
+- Border: `1px solid border` token
+- Text: `text` token, weight 600, size 15
+- Radius: `10`
+- Padding: `14` vertical, `16` horizontal
+- No shadow
+- "Delete call" variant additionally sets text color to `danger` token — pass a `variant="danger"` prop for this
+
+### 2f. `EmptyState` (`components/empty-state.tsx`)
+- Props: `message: string`, optional `actionLabel` + `onAction`
+- Centered vertically and horizontally, icon (generic, `textSecondary` color) above `message` (Body/secondary role), optional `SecondaryButton` below if `actionLabel` provided
+
+---
+
+## 3. Calls Screen (`app/(tabs)/calls.tsx`) — styling pass
+
+The data logic (loading, error, refresh, list) already works. Apply this styling:
+
+- Screen background: `background` token
+- Screen title "Calls" at top, Screen-title type role, `paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8`
+- Replace the inline row rendering with `<CallRow call={item} onPress={() => router.push(...)} />`
+- Loading state: centered `ActivityIndicator` with `color={accent}`
+- Error state: centered `EmptyState` with `message="Could not load calls."` and `actionLabel="Retry"` wired to the existing `loadCalls` retry function
+- Empty state (no calls): centered `EmptyState` with `message="No calls yet."`, no action button
+- Pull-to-refresh indicator tint: `accent` token (`tintColor` on iOS, `colors={[accent]}` on Android)
+
+---
+
+## 4. Home Screen (`app/(tabs)/index.tsx`) — build this out
+
+Currently a placeholder. Build it as a dashboard:
+
+1. **Header**: "Home" title (Screen-title role) + a short subtitle line, e.g. "Here's what's happening with your calls." (Body/secondary role). `paddingHorizontal: 16, paddingTop: 16`.
+2. **Stat row**: three `StatCard`s in a horizontal row, computed client-side from `CallLogService.getCalls()`:
+   - "Calls today" — count of calls where `date` falls within the current calendar day
+   - "Missed" — count where `status === 'NO_ANSWER'`
+   - "Avg. duration" — average `duration` of answered calls, formatted `m:ss`
+3. **Recent calls section**: Section-heading "Recent calls", followed by up to 5 most recent `CallRow` items (reuse the same component from Section 2b), each pressable to `call-actions/[id]` just like on the Calls screen. Below the list, a `SecondaryButton` labeled "See all calls" that navigates to the Calls tab (`router.push('/(tabs)/calls')` or `router.push('/calls')` depending on the project's route naming — match whatever `app/(tabs)/calls.tsx` resolves to).
+4. Fetch calls once on mount using `CallLogService.getCalls()`, same loading/error handling pattern as the Calls screen (reuse `ActivityIndicator` / `EmptyState`).
+5. Vertical gap of `16` between Header, Stat row, and Recent calls section. Whole screen wrapped in a `ScrollView` with `contentContainerStyle={{ paddingBottom: 24 }}`.
+
+---
+
+## 5. Call Actions Screen (`app/call-actions/[id].tsx`) — styling pass
+
+The data logic (fetch by id, call back, delete, recording check) already works. Apply this styling:
+
+- Screen background: `background` token, `padding: 20`
+- At top: large avatar (56x56, same style as `CallRow`'s avatar but bigger, initial + `badgeBackground`/`accent`), centered, with contact name (Section-heading role) below it centered, then phone number (Body/secondary role) centered
+- Below that, a small row of three pieces of info separated by `·`: direction, `StatusBadge`, formatted date/time — centered, Body/secondary role
+- `24` vertical gap, then:
+  - `PrimaryButton` "Call back" (always shown)
+  - `SecondaryButton` "Play recording" (only shown if `call.recordingPath` is non-empty) — leave its `onPress` as a no-op/TODO, playback wiring is out of scope for this pass
+  - `SecondaryButton` variant="danger" "Delete call" — keep the existing confirmation `Alert.alert` logic as-is, just restyle the button that triggers it
+- `12` gap between the three buttons
+- Not found state: centered `EmptyState` with `message="Call not found."`
+
+---
+
+## 6. Bottom Tab Bar (`components/app-tabs.tsx`)
+
+Already wired with two triggers: `index` (Home) and `calls` (Calls). For this pass:
+
+- Ensure `Colors.light.background` / `Colors.dark.background` and `backgroundElement` (for the tab bar's `indicatorColor`) match the tokens in Section 1a — update `constants/theme.ts` accordingly.
+- Selected tab label/icon color should use the `accent` token (`#E8862B`) via `labelStyle.selected.color` and the icon's tint, replacing the current `colors.text` selected color.
+- You need an icon asset `assets/images/tabIcons/calls.png` in the same monochrome/template style as the existing `home.png`, sized identically. If you cannot generate binary image assets, use a solid-color placeholder square PNG at the correct dimensions and leave a `// TODO: replace with final calls icon` comment.
+
+---
+
+## 7. What NOT to do
+
+- Do not add RTL layout, Arabic fonts, or Arabic copy — this app is LTR/English.
+- Do not add shadows anywhere outside the 3 places listed in Section 1d.
+- Do not change any function names, state variables, or data-fetching calls in the existing screen files — only add styling and the new components listed above.
+- Do not invent new colors outside the token table in Section 1a. If you need a new semantic color (e.g. "warning"), derive it the same way `success`/`danger` were derived and note it at the top of your PR/response instead of guessing silently.
