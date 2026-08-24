@@ -12,6 +12,7 @@ import com.facebook.react.common.ReleaseLevel
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint
 
 import com.sphinxtravel.CyrusCRM_ext.bridge.CallLogPackage
+import com.sphinxtravel.CyrusCRM_ext.bridge.LeadActionPackage
 
 import expo.modules.ApplicationLifecycleDispatcher
 import expo.modules.ExpoReactHostFactory
@@ -25,6 +26,8 @@ class MainApplication : Application(), ReactApplication {
         PackageList(this).packages.apply {
           // Exposes the call log DB to JS as NativeModules.CallLogModule.
           add(CallLogPackage())
+          // Exposes the lead action DB to JS as NativeModules.LeadActionModule.
+          add(LeadActionPackage())
         }
     )
   }

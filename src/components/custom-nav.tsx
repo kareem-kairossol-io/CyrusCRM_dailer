@@ -27,7 +27,9 @@ export function CustomNav({ state, descriptors, navigation }: any) {
         if (
           route.name.startsWith('_') ||
           route.name.startsWith('call-actions') ||
-          route.name === 'explore'
+          route.name === 'explore' ||
+          route.name === 'analytics' ||
+          route.name === 'settings'
         ) {
           return null;
         }
@@ -55,12 +57,12 @@ export function CustomNav({ state, descriptors, navigation }: any) {
         } else if (route.name === 'calls') {
           label = 'Calls';
           iconName = isFocused ? 'call' : 'call-outline';
-        } else if (route.name === 'analytics') {
-          label = 'Analytics';
-          iconName = isFocused ? 'pie-chart' : 'pie-chart-outline';
-        } else if (route.name === 'settings') {
-          label = 'Settings';
-          iconName = isFocused ? 'settings' : 'settings-outline';
+        } else if (route.name === 'leads') {
+          label = 'Leads';
+          iconName = isFocused ? 'people' : 'people-outline';
+        } else if (route.name === 'lead-actions') {
+          label = 'Actions';
+          iconName = isFocused ? 'flash' : 'flash-outline';
         }
 
         const activeColor = colors.accent;
