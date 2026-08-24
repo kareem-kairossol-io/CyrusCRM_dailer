@@ -78,9 +78,19 @@ export function CallRow({ call, onPress }: CallRowProps) {
 
       {/* Middle Content */}
       <View style={styles.middleContent}>
-        <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
-          {nameText}
-        </Text>
+        <View style={styles.nameHeaderRow}>
+          <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
+            {nameText}
+          </Text>
+          {Boolean(call.ref) && (
+            <View style={[styles.refTag, { backgroundColor: colors.badgeBackground }]}>
+              <Text style={[styles.refTagText, { color: colors.accent }]}>
+                {call.ref}
+              </Text>
+            </View>
+          )}
+        </View>
+
         <View style={styles.metaRow}>
           <StatusBadge status={call.status} />
           <Text style={[styles.dateText, { color: colors.textSecondary }]} numberOfLines={1}>
@@ -129,9 +139,24 @@ const styles = StyleSheet.create({
     marginRight: 8,
     gap: 4,
   },
+  nameHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
   name: {
     fontSize: 16,
     fontWeight: '600',
+    flexShrink: 1,
+  },
+  refTag: {
+    borderRadius: 999,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  refTagText: {
+    fontSize: 10,
+    fontWeight: '700',
   },
   metaRow: {
     flexDirection: 'row',

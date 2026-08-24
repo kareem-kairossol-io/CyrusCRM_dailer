@@ -9,12 +9,12 @@ export interface CallRecord {
   duration: number; // seconds
   date: number;     // epoch millis
   recordingPath: string;
+  ref?: string | null; // Nullable reference code linked from lead_actions
 }
 
 const { CallLogModule } = NativeModules;
 
 if (!CallLogModule) {
-  // Helps catch a missing/failed native module registration early in dev.
   console.warn(
     'CallLogModule is not available — check that CallLogPackage is registered in MainApplication.kt'
   );

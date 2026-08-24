@@ -21,6 +21,7 @@ class SqliteCallRepository(context: Context) : CallRepository {
             put(Columns.DURATION, call.duration)
             put(Columns.DATE, call.date)
             put(Columns.RECORDING_PATH, call.recordingPath)
+            put(Columns.REF, call.ref)
         }
         return dbHelper.writableDatabase.insert(TABLE_CALLS, null, values)
     }
@@ -78,7 +79,11 @@ class SqliteCallRepository(context: Context) : CallRepository {
 
     private fun readAll(cursor: Cursor): List<CallRecord> {
         val calls = mutableListOf<CallRecord>()
+        val refIndex = cursor.getColumnIndex(Columns.REF)
+
         while (cursor.moveToNext()) {
+            val refValue = if (refIndex != -1) cursor.getString(refIndex) else null
+
             calls.add(
                 CallRecord(
                     id = cursor.getLong(cursor.getColumnIndexOrThrow(Columns.ID)),
@@ -88,7 +93,8 @@ class SqliteCallRepository(context: Context) : CallRepository {
                     status = cursor.getString(cursor.getColumnIndexOrThrow(Columns.STATUS)),
                     duration = cursor.getLong(cursor.getColumnIndexOrThrow(Columns.DURATION)),
                     date = cursor.getLong(cursor.getColumnIndexOrThrow(Columns.DATE)),
-                    recordingPath = cursor.getString(cursor.getColumnIndexOrThrow(Columns.RECORDING_PATH))
+                    recordingPath = cursor.getString(cursor.getColumnIndexOrThrow(Columns.RECORDING_PATH)),
+                    ref = refValue
                 )
             )
         }

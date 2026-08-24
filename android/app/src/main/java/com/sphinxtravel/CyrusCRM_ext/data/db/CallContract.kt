@@ -3,7 +3,7 @@ package com.sphinxtravel.CyrusCRM_ext.data.db
 /** Single source of truth for table/column names. */
 object CallContract {
     const val DATABASE_NAME = "cyrus_crm_calls.db"
-    const val DATABASE_VERSION = 1
+    const val DATABASE_VERSION = 2
     const val TABLE_CALLS = "calls"
 
     object Columns {
@@ -15,5 +15,6 @@ object CallContract {
         const val DURATION = "duration"
         const val DATE = "date"
         const val RECORDING_PATH = "recording_path"
+        const val REF = "ref"
     }
 }

@@ -13,5 +13,6 @@ data class CallRecord(
     val status: String,         // "ANSWERED" | "NO_ANSWER"
     val duration: Long,
     val date: Long,
-    val recordingPath: String
+    val recordingPath: String,
+    val ref: String? = null     // Nullable reference ID linked from lead_actions
 )

@@ -26,14 +26,24 @@ class CallDatabaseHelper(context: Context) :
                 ${Columns.STATUS} TEXT,
                 ${Columns.DURATION} INTEGER,
                 ${Columns.DATE} INTEGER,
-                ${Columns.RECORDING_PATH} TEXT
+                ${Columns.RECORDING_PATH} TEXT,
+                ${Columns.REF} TEXT
             )
             """.trimIndent()
         )
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        db.execSQL("DROP TABLE IF EXISTS $TABLE_CALLS")
-        onCreate(db)
+        if (oldVersion < 2) {
+            try {
+                db.execSQL("ALTER TABLE $TABLE_CALLS ADD COLUMN ${Columns.REF} TEXT")
+            } catch (e: Exception) {
+                db.execSQL("DROP TABLE IF EXISTS $TABLE_CALLS")
+                onCreate(db)
+            }
+        } else {
+            db.execSQL("DROP TABLE IF EXISTS $TABLE_CALLS")
+            onCreate(db)
+        }
     }
 }

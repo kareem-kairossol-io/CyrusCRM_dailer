@@ -121,6 +121,15 @@ export default function CallActionsScreen() {
           {call.phoneNumber}
         </Text>
 
+        {/* Linked Ref Badge if present */}
+        {Boolean(call.ref) && (
+          <View style={[styles.refBadge, { backgroundColor: colors.badgeBackground }]}>
+            <Text style={[styles.refBadgeText, { color: colors.accent }]}>
+              Linked Ref: {call.ref}
+            </Text>
+          </View>
+        )}
+
         {/* Meta Info Row */}
         <View style={styles.metaRow}>
           <Text style={[styles.metaText, { color: colors.textSecondary }]}>
@@ -195,6 +204,16 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     marginTop: 4,
     textAlign: 'center',
+  },
+  refBadge: {
+    marginTop: 8,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  refBadgeText: {
+    fontSize: 12,
+    fontWeight: '700',
   },
   metaRow: {
     flexDirection: 'row',

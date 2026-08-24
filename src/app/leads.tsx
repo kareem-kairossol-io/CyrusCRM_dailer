@@ -70,11 +70,12 @@ export default function LeadsScreen() {
   const handleCallAndLogAction = async (lead: Lead) => {
     try {
       setCallingId(lead.id);
-      // Open phone dialer
-      Linking.openURL(`tel:${lead.number}`);
-      // Log action to SQLite database
+      // 1. Commit action to SQLite first
       const rowId = await LeadActionService.createAction(lead.id, lead.number);
-      console.log(`Action #${rowId} logged for lead ${lead.id} (${lead.number})`);
+      console.log(`Action #${rowId} logged for lead ID #${lead.id} (${lead.number})`);
+      
+      // 2. Open external phone dialer
+      await Linking.openURL(`tel:${lead.number}`);
     } catch (e) {
       Alert.alert('Error', 'Failed to log lead call action.');
     } finally {
@@ -124,7 +125,7 @@ export default function LeadsScreen() {
                   </View>
                 </View>
                 <Text style={[styles.refText, { color: colors.textSecondary }]}>
-                  ID: {item.refCode} • {item.number}
+                  ID: #{item.id} • {item.number}
                 </Text>
               </View>
 

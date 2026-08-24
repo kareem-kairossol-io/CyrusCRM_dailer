@@ -7,6 +7,7 @@ import android.provider.CallLog
 import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.sphinxtravel.CyrusCRM_ext.callsync.CallActionLinker
 import com.sphinxtravel.CyrusCRM_ext.callsync.CallDetailsEvaluator
 import com.sphinxtravel.CyrusCRM_ext.callsync.RecordingFileLocator
 import com.sphinxtravel.CyrusCRM_ext.data.model.CallRecord
@@ -16,7 +17,8 @@ import com.sphinxtravel.CyrusCRM_ext.data.repository.SqliteCallRepository
 /**
  * Orchestrator only: reads the latest call-log row, delegates direction/status
  * evaluation to [CallDetailsEvaluator], delegates recording lookup to
- * [RecordingFileLocator], and persists the result through [CallRepository].
+ * [RecordingFileLocator], attempts lead action linking via [CallActionLinker],
+ * and persists the result through [CallRepository].
  */
 class CallSyncWorker(appContext: Context, params: WorkerParameters) :
     CoroutineWorker(appContext, params) {
@@ -33,6 +35,7 @@ class CallSyncWorker(appContext: Context, params: WorkerParameters) :
 
     private val repository: CallRepository by lazy { SqliteCallRepository(applicationContext) }
     private val recordingLocator by lazy { RecordingFileLocator(applicationContext) }
+    private val actionLinker by lazy { CallActionLinker(applicationContext) }
 
     override suspend fun doWork(): Result {
         return try {
@@ -59,6 +62,13 @@ class CallSyncWorker(appContext: Context, params: WorkerParameters) :
                 "No recording (Unanswered/0s duration)"
             }
 
+            // Link call with any lead action within the call time window
+            val linkedRef = actionLinker.findMatchingRef(
+                phoneNumber = latestCall.number,
+                callStartTime = latestCall.date,
+                durationSeconds = latestCall.duration
+            )
+
             val record = CallRecord(
                 contactName = latestCall.contactName,
                 phoneNumber = latestCall.number,
@@ -66,11 +76,16 @@ class CallSyncWorker(appContext: Context, params: WorkerParameters) :
                 status = callDetails.status,
                 duration = latestCall.duration,
                 date = latestCall.date,
-                recordingPath = recordingPath
+                recordingPath = recordingPath,
+                ref = linkedRef
             )
             repository.insertCall(record)
 
             Log.d(TAG, buildLogSummary(record))
+
+            // Clear lead actions after processing/receiving call as requested
+            actionLinker.clearLeadActions()
+
             Result.success()
         } catch (e: Exception) {
             Log.e(TAG, "Error processing call log", e)
@@ -132,6 +147,7 @@ class CallSyncWorker(appContext: Context, params: WorkerParameters) :
         Duration       : ${record.duration} seconds
         Date           : ${record.date}
         Recording Path : ${record.recordingPath}
+        Linked Ref     : ${record.ref ?: "None"}
         =====================================================================
     """.trimIndent()
 }

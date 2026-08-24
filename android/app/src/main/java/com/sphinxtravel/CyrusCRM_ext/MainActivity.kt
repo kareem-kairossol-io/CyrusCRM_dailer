@@ -29,7 +29,8 @@ class MainActivity : ReactActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     SplashScreenManager.registerOnActivity(this)
-    super.onCreate(savedInstanceState)
+    // Pass null to super.onCreate to prevent react-native-screens Fragment restoration crash when returning from dialer/background
+    super.onCreate(null)
 
     checkAndRequestPermissions()
 
