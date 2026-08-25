@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { Colors } from '@/constants/theme';
+import { CallLogService } from '@/services/CallLogService';
 import { LeadActionService } from '@/services/LeadActionService';
 
 export interface Lead {
@@ -74,10 +75,15 @@ export default function LeadsScreen() {
       const rowId = await LeadActionService.createAction(lead.id, lead.number);
       console.log(`Action #${rowId} logged for lead ID #${lead.id} (${lead.number})`);
       
-      // 2. Open external phone dialer
-      await Linking.openURL(`tel:${lead.number}`);
+      // 2. Make direct call (triggers direct dial or native Dual-SIM picker)
+      try {
+        await CallLogService.makeDirectCall(lead.number);
+      } catch (directCallErr) {
+        // Fallback to openURL dialer if direct call fails
+        await Linking.openURL(`tel:${lead.number}`);
+      }
     } catch (e) {
-      Alert.alert('Error', 'Failed to log lead call action.');
+      Alert.alert('Error', 'Failed to place call.');
     } finally {
       setCallingId(null);
     }

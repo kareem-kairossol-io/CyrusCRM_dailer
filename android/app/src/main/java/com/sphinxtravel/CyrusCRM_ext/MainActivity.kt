@@ -20,6 +20,7 @@ class MainActivity : ReactActivity() {
     private const val PERMISSION_REQUEST_CODE = 101
 
     private val BASE_PERMISSIONS = listOf(
+      Manifest.permission.CALL_PHONE,
       Manifest.permission.READ_PHONE_STATE,
       Manifest.permission.READ_CALL_LOG,
       Manifest.permission.PROCESS_OUTGOING_CALLS,

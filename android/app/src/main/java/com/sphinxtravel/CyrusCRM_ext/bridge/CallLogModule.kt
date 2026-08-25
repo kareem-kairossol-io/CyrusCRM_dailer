@@ -1,5 +1,7 @@
 package com.sphinxtravel.CyrusCRM_ext.bridge
 
+import android.content.Intent
+import android.net.Uri
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
@@ -23,6 +25,7 @@ class CallLogModule(private val reactContext: ReactApplicationContext) :
         private const val ERR_READ = "ERR_READ_CALLS"
         private const val ERR_DELETE = "ERR_DELETE_CALL"
         private const val ERR_UPLOAD = "ERR_UPLOAD_RETRY"
+        private const val ERR_CALL = "ERR_MAKE_CALL"
     }
 
     override fun getName() = MODULE_NAME
@@ -100,6 +103,23 @@ class CallLogModule(private val reactContext: ReactApplicationContext) :
             } catch (e: Exception) {
                 promise.reject(ERR_UPLOAD, e.message, e)
             }
+        }
+    }
+
+    /**
+     * Directly places a call (or displays the system SIM selector dialog on Dual SIM devices)
+     * without opening the dialer keypad screen.
+     */
+    @ReactMethod
+    fun makeDirectCall(number: String, promise: Promise) {
+        try {
+            val intent = Intent(Intent.ACTION_CALL, Uri.parse("tel:$number")).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            reactContext.startActivity(intent)
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.reject(ERR_CALL, e.message, e)
         }
     }
 }

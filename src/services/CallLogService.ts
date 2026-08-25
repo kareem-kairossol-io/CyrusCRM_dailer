@@ -48,4 +48,12 @@ export const CallLogService = {
   retryFailedUploads(): Promise<boolean> {
     return CallLogModule.retryFailedUploads();
   },
+
+  /**
+   * Directly places a call (triggers system SIM picker on dual SIM devices)
+   * instead of opening the dialer keypad screen.
+   */
+  makeDirectCall(number: string): Promise<boolean> {
+    return CallLogModule.makeDirectCall(number);
+  },
 };
