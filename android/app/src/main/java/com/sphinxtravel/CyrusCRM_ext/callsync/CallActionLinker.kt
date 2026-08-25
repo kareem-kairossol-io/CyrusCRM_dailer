@@ -14,8 +14,8 @@ class CallActionLinker(private val context: Context) {
 
     companion object {
         private const val TAG = "CyrusCallActionLinker"
-        // Buffer interval: 1 minute MAX time window
-        private const val BUFFER_MS = 1 * 60 * 1000L
+        // Buffer interval: 5 minutes time window
+        private const val BUFFER_MS = 5 * 60 * 1000L
     }
 
     private val leadActionRepository: LeadActionRepository by lazy {
@@ -25,7 +25,7 @@ class CallActionLinker(private val context: Context) {
     /**
      * Tries to find a lead action matching [phoneNumber] within the call time interval:
      * [callStartTime - BUFFER_MS] to [(callStartTime + durationMs) + BUFFER_MS].
-     * Maximum interval allowed is 1 minute (60,000 ms).
+     * Maximum interval allowed is 5 minutes (300,000 ms).
      * Returns the matched lead's reference code string (e.g. "REF-101"), or null if no match.
      */
     fun findMatchingRef(phoneNumber: String, callStartTime: Long, durationSeconds: Long): String? {
