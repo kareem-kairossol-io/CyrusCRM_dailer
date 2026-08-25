@@ -17,6 +17,7 @@ object CallRecordMapper {
         putDouble("date", call.date.toDouble())
         putString("recordingPath", call.recordingPath)
         putString("ref", call.ref)
+        putString("uploadStatus", call.uploadStatus)
     }
 
     fun toWritableArray(calls: List<CallRecord>): WritableArray = Arguments.createArray().apply {

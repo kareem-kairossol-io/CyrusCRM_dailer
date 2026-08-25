@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native'
 import { SymbolView } from 'expo-symbols';
 
 import { StatusBadge } from '@/components/status-badge';
+import { UploadStatusBadge } from '@/components/upload-status-badge';
 import { Colors } from '@/constants/theme';
 import { CallRecord } from '@/services/CallLogService';
 
@@ -93,6 +94,7 @@ export function CallRow({ call, onPress }: CallRowProps) {
 
         <View style={styles.metaRow}>
           <StatusBadge status={call.status} />
+          <UploadStatusBadge status={call.uploadStatus} />
           <Text style={[styles.dateText, { color: colors.textSecondary }]} numberOfLines={1}>
             · {formatDate(call.date)}
           </Text>
@@ -162,6 +164,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    flexWrap: 'wrap',
   },
   dateText: {
     fontSize: 13,

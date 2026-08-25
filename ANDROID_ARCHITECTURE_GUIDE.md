@@ -8,10 +8,11 @@ This document serves as a reference for the architecture, component hierarchy, l
 
 **CyrusCRM_ext** is a hybrid mobile application built with **Expo SDK 57** and **React Native 0.86**, enhanced with a custom **Native Android Subsystem** written in **Kotlin**. 
 
-The app features two core native subsystems:
+The app features three core native subsystems:
 1. **CallLog Subsystem**: Automatic, background call log detection and call recording file matching, persisting call records locally in SQLite (`cyrus_crm_calls.db`).
 2. **LeadAction Subsystem**: Manages lead actions (`lead_id`, `number`, `date`), persisting records locally in SQLite (`cyrus_crm_lead_actions.db`).
-3. **CallActionLinker Subsystem**: Matches received calls with lead actions by phone number and call time window `[callStartTime - 5min .. callEndTime + 5min]` (5 minutes MAX), populates the `ref` column in `calls` table, and automatically clears lead actions after sync.
+3. **CallActionLinker Subsystem**: Matches received calls with lead actions by phone number and call time window `[callStartTime - 5min .. callEndTime + 5min]`, populates the `ref` column in `calls` table, and automatically clears lead actions after sync.
+4. **CallUpload Queue Subsystem**: Sweeps all calls with `upload_status IN ('PENDING', 'FAILED')` (oldest first) and POSTs payload JSON to `http://82.29.168.80:3000/api/data`, updating SQLite status to `UPLOADED` or `FAILED`.
 
 ### Core Technology Stack
 - **Framework**: Expo SDK `~57.0.15` (Expo Router `~57.0.15`)
@@ -28,7 +29,7 @@ The app features two core native subsystems:
 
 The custom navigation bar uses vector icons (`Ionicons`) with 4 main bottom tabs:
 1. **Home** (`index.tsx`)
-2. **Calls** (`calls.tsx`) - Displays call records with linked lead reference tags (`ref`).
+2. **Calls** (`calls.tsx`) - Displays call records with linked lead reference tags (`ref`) and upload status.
 3. **Leads** (`leads.tsx`) - Displays customer leads with unique ref codes & dummy phone numbers (`+20 12 25609831`, `01550552371`, `0114588203`). Allows calling and auto-logging actions.
 4. **Actions** (`lead-actions.tsx`) - Displays live lead action records fetched from SQLite via `LeadActionService.getAllActions()`.
 
@@ -43,7 +44,7 @@ The custom navigation bar uses vector icons (`Ionicons`) with 4 main bottom tabs
   - [CallActionLinker.kt](file:///d:/projects/cyrus-crm/CyrusCRM_ext/android/app/src/main/java/com/sphinxtravel/CyrusCRM_ext/callsync/CallActionLinker.kt) (5 minutes MAX interval matching & post-sync cleanup)
   - [CallDetailsEvaluator.kt](file:///d:/projects/cyrus-crm/CyrusCRM_ext/android/app/src/main/java/com/sphinxtravel/CyrusCRM_ext/callsync/CallDetailsEvaluator.kt)
   - [RecordingFileLocator.kt](file:///d:/projects/cyrus-crm/CyrusCRM_ext/android/app/src/main/java/com/sphinxtravel/CyrusCRM_ext/callsync/RecordingFileLocator.kt)
-- **Data & DB**: [CallContract.kt](file:///d:/projects/cyrus-crm/CyrusCRM_ext/android/app/src/main/java/com/sphinxtravel/CyrusCRM_ext/data/db/CallContract.kt) (v2, added `ref` column), [CallDatabaseHelper.kt](file:///d:/projects/cyrus-crm/CyrusCRM_ext/android/app/src/main/java/com/sphinxtravel/CyrusCRM_ext/data/db/CallDatabaseHelper.kt), [SqliteCallRepository.kt](file:///d:/projects/cyrus-crm/CyrusCRM_ext/android/app/src/main/java/com/sphinxtravel/CyrusCRM_ext/data/repository/SqliteCallRepository.kt)
+- **Data & DB**: [CallContract.kt](file:///d:/projects/cyrus-crm/CyrusCRM_ext/android/app/src/main/java/com/sphinxtravel/CyrusCRM_ext/data/db/CallContract.kt) (v3, added `upload_status` column), [CallDatabaseHelper.kt](file:///d:/projects/cyrus-crm/CyrusCRM_ext/android/app/src/main/java/com/sphinxtravel/CyrusCRM_ext/data/db/CallDatabaseHelper.kt), [SqliteCallRepository.kt](file:///d:/projects/cyrus-crm/CyrusCRM_ext/android/app/src/main/java/com/sphinxtravel/CyrusCRM_ext/data/repository/SqliteCallRepository.kt)
 - **Bridge & Service**: [CallLogModule.kt](file:///d:/projects/cyrus-crm/CyrusCRM_ext/android/app/src/main/java/com/sphinxtravel/CyrusCRM_ext/bridge/CallLogModule.kt) $\rightarrow$ [CallLogService.ts](file:///d:/projects/cyrus-crm/CyrusCRM_ext/src/services/CallLogService.ts)
 
 ### Subsystem 2: LeadAction Subsystem
@@ -52,13 +53,33 @@ The custom navigation bar uses vector icons (`Ionicons`) with 4 main bottom tabs
 - **Bridge & Package**: [LeadActionMapper.kt](file:///d:/projects/cyrus-crm/CyrusCRM_ext/android/app/src/main/java/com/sphinxtravel/CyrusCRM_ext/bridge/LeadActionMapper.kt), [LeadActionModule.kt](file:///d:/projects/cyrus-crm/CyrusCRM_ext/android/app/src/main/java/com/sphinxtravel/CyrusCRM_ext/bridge/LeadActionModule.kt), [LeadActionPackage.kt](file:///d:/projects/cyrus-crm/CyrusCRM_ext/android/app/src/main/java/com/sphinxtravel/CyrusCRM_ext/bridge/LeadActionPackage.kt)
 - **TypeScript Service**: [LeadActionService.ts](file:///d:/projects/cyrus-crm/CyrusCRM_ext/src/services/LeadActionService.ts)
 
+### Subsystem 3: CallUpload Queue Subsystem
+- **Mapper**: [CallUploadPayloadMapper.kt](file:///d:/projects/cyrus-crm/CyrusCRM_ext/android/app/src/main/java/com/sphinxtravel/CyrusCRM_ext/upload/CallUploadPayloadMapper.kt) (Converts `CallRecord` to `JSONObject`)
+- **API Client**: [CallUploadApiClient.kt](file:///d:/projects/cyrus-crm/CyrusCRM_ext/android/app/src/main/java/com/sphinxtravel/CyrusCRM_ext/upload/CallUploadApiClient.kt) (HTTP POST to `http://82.29.168.80:3000/api/data`)
+- **Queue Service**: [CallUploadService.kt](file:///d:/projects/cyrus-crm/CyrusCRM_ext/android/app/src/main/java/com/sphinxtravel/CyrusCRM_ext/upload/CallUploadService.kt) (Processes all `PENDING`/`FAILED` calls sequentially)
+- **Worker & Scheduler**: [CallUploadWorker.kt](file:///d:/projects/cyrus-crm/CyrusCRM_ext/android/app/src/main/java/com/sphinxtravel/CyrusCRM_ext/work/CallUploadWorker.kt) & `CallRecordingWorkScheduler.scheduleUploadQueueNow(context)` (Unique Work with `ExistingWorkPolicy.APPEND_OR_REPLACE`)
+
 ---
 
-## 4. How Call Action Linking Works
+## 4. How Call Upload Queue Works
 
-1. **Lead Action Log**: User places a call or logs an action in React Native. A record is inserted into SQLite table `lead_actions` (`lead_id`, `number`, `date`).
-2. **Call Received**: Phone call ends. `CallStateReceiver` triggers `CallSyncWorker`.
-3. **Interval Lookup**: `CallActionLinker` queries `lead_actions` for actions where `number` matches the call number and `date` falls within **`[callStart - 5min .. callEnd + 5min]`** (5 minutes MAX).
-4. **Ref Link**: If matched, `ref` (e.g. `"REF-101"`) is assigned to the `CallRecord` and saved into `calls` table (`cyrus_crm_calls.db`).
-5. **Post-Sync Cleanup**: `CallActionLinker.clearLeadActions()` empties `lead_actions` table so pending actions are cleaned after processing.
-6. **UI Display**: `CallRow` and `CallActionsScreen` display the `REF` tag directly on screen.
+```
+CallSyncWorker.doWork()
+   ├─ insert CallRecord (upload_status = PENDING, DB default)
+   └─ CallRecordingWorkScheduler.scheduleUploadQueueNow(context)
+                │
+                ▼
+        CallUploadWorker.doWork()   (CoroutineWorker, unique work "CallUploadQueueWork")
+                │
+                ▼
+        CallUploadService.processQueue()
+                │  fetches ALL calls where upload_status IN (PENDING, FAILED)
+                │  ordered by date ASC (oldest first), uploads sequentially
+                ▼
+        CallUploadService.uploadOne(call)
+                │
+                ├─ CallUploadPayloadMapper.toJson(call)
+                ├─ CallUploadApiClient.post(json)
+                └─ on success -> repository.updateUploadStatus(id, UPLOADED)
+                   on failure -> repository.updateUploadStatus(id, FAILED)
+```

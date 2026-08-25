@@ -6,6 +6,7 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.sphinxtravel.CyrusCRM_ext.data.repository.CallRepository
 import com.sphinxtravel.CyrusCRM_ext.data.repository.SqliteCallRepository
+import com.sphinxtravel.CyrusCRM_ext.work.CallRecordingWorkScheduler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -21,6 +22,7 @@ class CallLogModule(private val reactContext: ReactApplicationContext) :
         private const val MODULE_NAME = "CallLogModule"
         private const val ERR_READ = "ERR_READ_CALLS"
         private const val ERR_DELETE = "ERR_DELETE_CALL"
+        private const val ERR_UPLOAD = "ERR_UPLOAD_RETRY"
     }
 
     override fun getName() = MODULE_NAME
@@ -85,6 +87,18 @@ class CallLogModule(private val reactContext: ReactApplicationContext) :
                 promise.resolve(true)
             } catch (e: Exception) {
                 promise.reject(ERR_DELETE, e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
+    fun retryFailedUploads(promise: Promise) {
+        moduleScope.launch {
+            try {
+                CallRecordingWorkScheduler.scheduleUploadQueueNow(reactContext)
+                promise.resolve(true)
+            } catch (e: Exception) {
+                promise.reject(ERR_UPLOAD, e.message, e)
             }
         }
     }

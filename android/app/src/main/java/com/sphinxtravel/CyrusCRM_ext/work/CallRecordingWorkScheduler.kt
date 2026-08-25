@@ -13,6 +13,7 @@ object CallRecordingWorkScheduler {
 
     private const val TAG = "CyrusWorkScheduler"
     private const val TRIGGER_WORK_NAME = "CallLogContentUriTriggerWork"
+    private const val UPLOAD_QUEUE_WORK_NAME = "CallUploadQueueWork"
 
     /** Run the worker immediately once a call ends. */
     fun scheduleCallSyncNow(context: Context) {
@@ -22,6 +23,21 @@ object CallRecordingWorkScheduler {
             Log.d(TAG, "Enqueued CallSyncWorker request.")
         } catch (e: Exception) {
             Log.e(TAG, "Error enqueueing CallSyncWorker", e)
+        }
+    }
+
+    /** Wakes the upload queue: uploads the newest call plus any old pending/failed ones. */
+    fun scheduleUploadQueueNow(context: Context) {
+        try {
+            val workRequest = OneTimeWorkRequestBuilder<CallUploadWorker>().build()
+            WorkManager.getInstance(context).enqueueUniqueWork(
+                UPLOAD_QUEUE_WORK_NAME,
+                ExistingWorkPolicy.APPEND_OR_REPLACE,
+                workRequest
+            )
+            Log.d(TAG, "Enqueued CallUploadWorker request (queue woken).")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error enqueueing CallUploadWorker", e)
         }
     }
 

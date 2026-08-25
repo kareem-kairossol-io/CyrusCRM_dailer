@@ -16,6 +16,7 @@ import { EmptyState } from '@/components/empty-state';
 import { PrimaryButton } from '@/components/primary-button';
 import { SecondaryButton } from '@/components/secondary-button';
 import { StatusBadge } from '@/components/status-badge';
+import { UploadStatusBadge } from '@/components/upload-status-badge';
 import { Colors } from '@/constants/theme';
 import { CallLogService, CallRecord } from '@/services/CallLogService';
 
@@ -55,6 +56,17 @@ export default function CallActionsScreen() {
   const handleCallBack = () => {
     if (call?.phoneNumber) {
       Linking.openURL(`tel:${call.phoneNumber}`);
+    }
+  };
+
+  const handleRetryUpload = async () => {
+    try {
+      await CallLogService.retryFailedUploads();
+      Alert.alert('Upload Queue Woken', 'Retrying upload queue in the background.', [
+        { text: 'OK', onPress: () => load() },
+      ]);
+    } catch (e) {
+      Alert.alert('Error', 'Failed to trigger upload retry.');
     }
   };
 
@@ -138,6 +150,8 @@ export default function CallActionsScreen() {
           <Text style={[styles.metaText, { color: colors.textSecondary }]}>·</Text>
           <StatusBadge status={call.status} />
           <Text style={[styles.metaText, { color: colors.textSecondary }]}>·</Text>
+          <UploadStatusBadge status={call.uploadStatus} />
+          <Text style={[styles.metaText, { color: colors.textSecondary }]}>·</Text>
           <Text style={[styles.metaText, { color: colors.textSecondary }]}>
             {formatDate(call.date)}
           </Text>
@@ -146,6 +160,10 @@ export default function CallActionsScreen() {
         {/* Action Buttons */}
         <View style={styles.buttonGroup}>
           <PrimaryButton title="Call back" onPress={handleCallBack} />
+
+          {call.uploadStatus !== 'UPLOADED' && (
+            <SecondaryButton title="Retry Upload Queue" onPress={handleRetryUpload} />
+          )}
 
           {Boolean(call.recordingPath) && (
             <SecondaryButton
@@ -221,6 +239,8 @@ const styles = StyleSheet.create({
     gap: 6,
     marginTop: 10,
     marginBottom: 24,
+    flexWrap: 'wrap',
+    justifyContent: 'center',
   },
   metaText: {
     fontSize: 13,

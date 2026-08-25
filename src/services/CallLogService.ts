@@ -10,6 +10,7 @@ export interface CallRecord {
   date: number;     // epoch millis
   recordingPath: string;
   ref?: string | null; // Nullable reference code linked from lead_actions
+  uploadStatus?: 'PENDING' | 'UPLOADED' | 'FAILED' | string;
 }
 
 const { CallLogModule } = NativeModules;
@@ -26,7 +27,7 @@ export const CallLogService = {
     return CallLogModule.getCalls();
   },
 
-  /** Calls at/after the given epoch-millis timestamp — for incremental sync. */
+  /** Calls at/after the given epoch-millis timestamp — for incremental sync from JS. */
   getCallsSince(timestamp: number): Promise<CallRecord[]> {
     return CallLogModule.getCallsSince(timestamp);
   },
@@ -41,5 +42,10 @@ export const CallLogService = {
 
   deleteAllCalls(): Promise<boolean> {
     return CallLogModule.deleteAllCalls();
+  },
+
+  /** Wakes the upload queue to retry any PENDING or FAILED uploads. */
+  retryFailedUploads(): Promise<boolean> {
+    return CallLogModule.retryFailedUploads();
   },
 };

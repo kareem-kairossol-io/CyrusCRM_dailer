@@ -14,5 +14,6 @@ data class CallRecord(
     val duration: Long,
     val date: Long,
     val recordingPath: String,
-    val ref: String? = null     // Nullable reference ID linked from lead_actions
+    val ref: String? = null,    // Nullable reference ID linked from lead_actions
+    val uploadStatus: String = UploadStatus.PENDING
 )

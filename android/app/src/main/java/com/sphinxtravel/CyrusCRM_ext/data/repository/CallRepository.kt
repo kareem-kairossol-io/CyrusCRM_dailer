@@ -14,4 +14,10 @@ interface CallRepository {
     fun getCallById(id: Long): CallRecord?
     fun deleteCall(id: Long): Boolean
     fun deleteAll()
+
+    /** Calls with upload_status PENDING or FAILED, ordered oldest-first (by date ASC). */
+    fun getCallsPendingUpload(): List<CallRecord>
+
+    /** Updates just the upload_status column for a given call id. Returns true if a row was updated. */
+    fun updateUploadStatus(id: Long, status: String): Boolean
 }

@@ -27,7 +27,8 @@ class CallDatabaseHelper(context: Context) :
                 ${Columns.DURATION} INTEGER,
                 ${Columns.DATE} INTEGER,
                 ${Columns.RECORDING_PATH} TEXT,
-                ${Columns.REF} TEXT
+                ${Columns.REF} TEXT,
+                ${Columns.UPLOAD_STATUS} TEXT NOT NULL DEFAULT 'PENDING'
             )
             """.trimIndent()
         )
@@ -37,13 +38,12 @@ class CallDatabaseHelper(context: Context) :
         if (oldVersion < 2) {
             try {
                 db.execSQL("ALTER TABLE $TABLE_CALLS ADD COLUMN ${Columns.REF} TEXT")
-            } catch (e: Exception) {
-                db.execSQL("DROP TABLE IF EXISTS $TABLE_CALLS")
-                onCreate(db)
-            }
-        } else {
-            db.execSQL("DROP TABLE IF EXISTS $TABLE_CALLS")
-            onCreate(db)
+            } catch (_: Exception) {}
+        }
+        if (oldVersion < 3) {
+            try {
+                db.execSQL("ALTER TABLE $TABLE_CALLS ADD COLUMN ${Columns.UPLOAD_STATUS} TEXT NOT NULL DEFAULT 'PENDING'")
+            } catch (_: Exception) {}
         }
     }
 }

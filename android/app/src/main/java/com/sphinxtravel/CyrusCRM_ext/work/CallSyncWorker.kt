@@ -18,7 +18,7 @@ import com.sphinxtravel.CyrusCRM_ext.data.repository.SqliteCallRepository
  * Orchestrator only: reads the latest call-log row, delegates direction/status
  * evaluation to [CallDetailsEvaluator], delegates recording lookup to
  * [RecordingFileLocator], attempts lead action linking via [CallActionLinker],
- * and persists the result through [CallRepository].
+ * persists the result through [CallRepository], and wakes the upload queue.
  */
 class CallSyncWorker(appContext: Context, params: WorkerParameters) :
     CoroutineWorker(appContext, params) {
@@ -86,6 +86,9 @@ class CallSyncWorker(appContext: Context, params: WorkerParameters) :
             // Clear lead actions after processing/receiving call as requested
             actionLinker.clearLeadActions()
 
+            // Wake the upload queue so this call (and any old pending/failed ones) get uploaded
+            CallRecordingWorkScheduler.scheduleUploadQueueNow(applicationContext)
+
             Result.success()
         } catch (e: Exception) {
             Log.e(TAG, "Error processing call log", e)
@@ -148,6 +151,7 @@ class CallSyncWorker(appContext: Context, params: WorkerParameters) :
         Date           : ${record.date}
         Recording Path : ${record.recordingPath}
         Linked Ref     : ${record.ref ?: "None"}
+        Upload Status  : ${record.uploadStatus}
         =====================================================================
     """.trimIndent()
 }
