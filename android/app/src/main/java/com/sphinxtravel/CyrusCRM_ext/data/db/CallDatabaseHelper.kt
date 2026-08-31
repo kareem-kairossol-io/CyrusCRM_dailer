@@ -28,7 +28,9 @@ class CallDatabaseHelper(context: Context) :
                 ${Columns.DATE} INTEGER,
                 ${Columns.RECORDING_PATH} TEXT,
                 ${Columns.REF} TEXT,
-                ${Columns.UPLOAD_STATUS} TEXT NOT NULL DEFAULT 'PENDING'
+                ${Columns.UPLOAD_STATUS} TEXT NOT NULL DEFAULT 'PENDING',
+                ${Columns.GOOGLE_DRIVE_FILE_ID} TEXT,
+                ${Columns.GOOGLE_DRIVE_FILE_URL} TEXT
             )
             """.trimIndent()
         )
@@ -43,6 +45,12 @@ class CallDatabaseHelper(context: Context) :
         if (oldVersion < 3) {
             try {
                 db.execSQL("ALTER TABLE $TABLE_CALLS ADD COLUMN ${Columns.UPLOAD_STATUS} TEXT NOT NULL DEFAULT 'PENDING'")
+            } catch (_: Exception) {}
+        }
+        if (oldVersion < 4) {
+            try {
+                db.execSQL("ALTER TABLE $TABLE_CALLS ADD COLUMN ${Columns.GOOGLE_DRIVE_FILE_ID} TEXT")
+                db.execSQL("ALTER TABLE $TABLE_CALLS ADD COLUMN ${Columns.GOOGLE_DRIVE_FILE_URL} TEXT")
             } catch (_: Exception) {}
         }
     }

@@ -30,6 +30,8 @@ class SqliteCallRepository(context: Context) : CallRepository {
                 put(Columns.RECORDING_PATH, call.recordingPath)
                 put(Columns.REF, call.ref)
                 put(Columns.UPLOAD_STATUS, call.uploadStatus)
+                put(Columns.GOOGLE_DRIVE_FILE_ID, call.googleDriveFileId)
+                put(Columns.GOOGLE_DRIVE_FILE_URL, call.googleDriveFileUrl)
             }
             dbHelper.writableDatabase.insert(TABLE_CALLS, null, values)
         } catch (e: Exception) {
@@ -149,10 +151,31 @@ class SqliteCallRepository(context: Context) : CallRepository {
         }
     }
 
+    override fun updateGoogleDriveInfo(id: Long, fileId: String, fileUrl: String): Boolean {
+        return try {
+            val values = ContentValues().apply {
+                put(Columns.GOOGLE_DRIVE_FILE_ID, fileId)
+                put(Columns.GOOGLE_DRIVE_FILE_URL, fileUrl)
+            }
+            val rows = dbHelper.writableDatabase.update(
+                TABLE_CALLS,
+                values,
+                "${Columns.ID} = ?",
+                arrayOf(id.toString())
+            )
+            rows > 0
+        } catch (e: Exception) {
+            Log.e(TAG, "Error updating Google Drive info for call id=$id", e)
+            false
+        }
+    }
+
     private fun readAll(cursor: Cursor): List<CallRecord> {
         val calls = mutableListOf<CallRecord>()
         val refIndex = cursor.getColumnIndex(Columns.REF)
         val uploadStatusIndex = cursor.getColumnIndex(Columns.UPLOAD_STATUS)
+        val driveIdIndex = cursor.getColumnIndex(Columns.GOOGLE_DRIVE_FILE_ID)
+        val driveUrlIndex = cursor.getColumnIndex(Columns.GOOGLE_DRIVE_FILE_URL)
 
         while (cursor.moveToNext()) {
             val refValue = if (refIndex != -1) cursor.getString(refIndex) else null
@@ -161,6 +184,8 @@ class SqliteCallRepository(context: Context) : CallRepository {
             } else {
                 UploadStatus.PENDING
             }
+            val driveIdValue = if (driveIdIndex != -1) cursor.getString(driveIdIndex) else null
+            val driveUrlValue = if (driveUrlIndex != -1) cursor.getString(driveUrlIndex) else null
 
             calls.add(
                 CallRecord(
@@ -173,7 +198,9 @@ class SqliteCallRepository(context: Context) : CallRepository {
                     date = cursor.getLong(cursor.getColumnIndexOrThrow(Columns.DATE)),
                     recordingPath = cursor.getString(cursor.getColumnIndexOrThrow(Columns.RECORDING_PATH)),
                     ref = refValue,
-                    uploadStatus = uploadStatusValue
+                    uploadStatus = uploadStatusValue,
+                    googleDriveFileId = driveIdValue,
+                    googleDriveFileUrl = driveUrlValue
                 )
             )
         }

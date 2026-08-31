@@ -11,6 +11,8 @@ export interface CallRecord {
   recordingPath: string;
   ref?: string | null; // Nullable reference code linked from lead_actions
   uploadStatus?: 'PENDING' | 'UPLOADED' | 'FAILED' | string;
+  googleDriveFileId?: string | null;
+  googleDriveFileUrl?: string | null;
 }
 
 const { CallLogModule } = NativeModules;

@@ -18,6 +18,8 @@ object CallRecordMapper {
         putString("recordingPath", call.recordingPath)
         putString("ref", call.ref)
         putString("uploadStatus", call.uploadStatus)
+        putString("googleDriveFileId", call.googleDriveFileId)
+        putString("googleDriveFileUrl", call.googleDriveFileUrl)
     }
 
     fun toWritableArray(calls: List<CallRecord>): WritableArray = Arguments.createArray().apply {

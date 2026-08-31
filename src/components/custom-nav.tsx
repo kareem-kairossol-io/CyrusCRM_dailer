@@ -70,6 +70,9 @@ export function CustomNav({ state, descriptors, navigation }: any) {
         } else if (route.name === 'lead-actions') {
           label = 'Actions';
           iconName = isFocused ? 'flash' : 'flash-outline';
+        } else if (route.name === 'profile') {
+          label = 'Profile';
+          iconName = isFocused ? 'person' : 'person-outline';
         }
 
         const activeColor = colors.accent;

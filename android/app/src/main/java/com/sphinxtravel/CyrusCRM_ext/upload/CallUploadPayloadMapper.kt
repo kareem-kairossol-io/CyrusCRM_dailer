@@ -14,6 +14,8 @@ object CallUploadPayloadMapper {
         put("duration", call.duration)
         put("date", call.date)
         put("recordingPath", call.recordingPath)
-        put("ref", call.ref)
+        put("googleDriveFileId", call.googleDriveFileId ?: JSONObject.NULL)
+        put("googleDriveFileUrl", call.googleDriveFileUrl ?: JSONObject.NULL)
+        put("ref", call.ref ?: JSONObject.NULL)
     }
 }

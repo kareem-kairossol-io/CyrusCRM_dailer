@@ -20,4 +20,7 @@ interface CallRepository {
 
     /** Updates just the upload_status column for a given call id. Returns true if a row was updated. */
     fun updateUploadStatus(id: Long, status: String): Boolean
+
+    /** Updates google_drive_file_id and google_drive_file_url for a given call id. */
+    fun updateGoogleDriveInfo(id: Long, fileId: String, fileUrl: String): Boolean
 }

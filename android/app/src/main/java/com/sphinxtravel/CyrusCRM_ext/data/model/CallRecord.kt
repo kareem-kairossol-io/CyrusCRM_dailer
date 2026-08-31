@@ -15,5 +15,7 @@ data class CallRecord(
     val date: Long,
     val recordingPath: String,
     val ref: String? = null,    // Nullable reference ID linked from lead_actions
-    val uploadStatus: String = UploadStatus.PENDING
+    val uploadStatus: String = UploadStatus.PENDING,
+    val googleDriveFileId: String? = null,
+    val googleDriveFileUrl: String? = null
 )
