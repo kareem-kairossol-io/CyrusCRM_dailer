@@ -12,6 +12,12 @@ export function CustomNav({ state, descriptors, navigation }: any) {
 
   if (!state || !state.routes) return null;
 
+  // Hide the navigation bar completely on the login screen
+  const activeRoute = state.routes[state.index];
+  if (activeRoute && activeRoute.name === 'login') {
+    return null;
+  }
+
   return (
     <View
       style={[
@@ -25,6 +31,7 @@ export function CustomNav({ state, descriptors, navigation }: any) {
       {state.routes.map((route: any, index: number) => {
         // Exclude hidden screens or routes starting with _ or call-actions
         if (
+          route.name === 'login' ||
           route.name.startsWith('_') ||
           route.name.startsWith('call-actions') ||
           route.name === 'explore' ||

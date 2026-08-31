@@ -11,6 +11,7 @@ import com.facebook.react.ReactHost
 import com.facebook.react.common.ReleaseLevel
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint
 
+import com.sphinxtravel.CyrusCRM_ext.bridge.AuthPackage
 import com.sphinxtravel.CyrusCRM_ext.bridge.CallLogPackage
 import com.sphinxtravel.CyrusCRM_ext.bridge.LeadActionPackage
 
@@ -24,6 +25,8 @@ class MainApplication : Application(), ReactApplication {
       context = applicationContext,
       packageList =
         PackageList(this).packages.apply {
+          // Exposes authentication & SQLite session DB to JS as NativeModules.AuthModule.
+          add(AuthPackage())
           // Exposes the call log DB to JS as NativeModules.CallLogModule.
           add(CallLogPackage())
           // Exposes the lead action DB to JS as NativeModules.LeadActionModule.
