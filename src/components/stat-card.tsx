@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View, useColorScheme } from 'react-native';
 
-import { Colors } from '@/constants/theme';
+import { Colors, NotoKufiArabic } from '@/constants/theme';
 
 export interface StatCardProps {
   icon?: React.ReactNode;
@@ -21,8 +21,8 @@ export function StatCard({ icon, value, label }: StatCardProps) {
         scheme === 'dark' && { borderWidth: 1, borderColor: colors.border },
       ]}>
       {icon && <View style={styles.iconWrapper}>{icon}</View>}
-      <Text style={[styles.value, { color: colors.text }]}>{value}</Text>
-      <Text style={[styles.label, { color: colors.textSecondary }]}>{label}</Text>
+      <Text style={[styles.value, { color: colors.text, fontFamily: NotoKufiArabic.bold }]}>{value}</Text>
+      <Text style={[styles.label, { color: colors.textSecondary, fontFamily: NotoKufiArabic.medium }]}>{label}</Text>
     </View>
   );
 }
@@ -31,19 +31,20 @@ const styles = StyleSheet.create({
   card: {
     flex: 1,
     borderRadius: 16,
-    padding: 20,
+    padding: 16,
     justifyContent: 'center',
+    alignItems: 'flex-start',
   },
   iconWrapper: {
     marginBottom: 8,
   },
   value: {
-    fontSize: 26,
-    fontWeight: '800',
+    fontSize: 22,
     marginBottom: 4,
+    textAlign: 'right',
   },
   label: {
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: 11,
+    textAlign: 'right',
   },
 });

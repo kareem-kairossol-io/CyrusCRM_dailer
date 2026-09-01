@@ -1,3 +1,5 @@
+import { useRouter } from 'expo-router';
+import { SymbolView } from 'expo-symbols';
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -9,14 +11,12 @@ import {
   useColorScheme,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { SymbolView } from 'expo-symbols';
 
 import { CallRow } from '@/components/call-row';
 import { EmptyState } from '@/components/empty-state';
 import { SecondaryButton } from '@/components/secondary-button';
 import { StatCard } from '@/components/stat-card';
-import { Colors } from '@/constants/theme';
+import { Colors, NotoKufiArabic } from '@/constants/theme';
 import { CallLogService, CallRecord } from '@/services/CallLogService';
 
 function formatDuration(seconds: number): string {
@@ -41,7 +41,7 @@ export default function HomeScreen() {
       const data = await CallLogService.getCalls();
       setCalls(data);
     } catch (e) {
-      setError('Could not load calls dashboard.');
+      setError('تعذر تحميل لوحة تحكم المكالمات.');
     }
   }, []);
 
@@ -63,9 +63,11 @@ export default function HomeScreen() {
     return (
       <SafeAreaView style={[styles.screen, { backgroundColor: colors.background }]}>
         <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.text }]}>Home</Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            Here&apos;s what&apos;s happening with your calls.
+          <Text style={[styles.title, { color: colors.text, fontFamily: NotoKufiArabic.bold }]}>
+            الرئيسية
+          </Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary, fontFamily: NotoKufiArabic.regular }]}>
+            ملخص وإحصائيات سجل المكالمات والمتابعات.
           </Text>
         </View>
         <View style={styles.center}>
@@ -79,11 +81,13 @@ export default function HomeScreen() {
     return (
       <SafeAreaView style={[styles.screen, { backgroundColor: colors.background }]}>
         <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.text }]}>Home</Text>
+          <Text style={[styles.title, { color: colors.text, fontFamily: NotoKufiArabic.bold }]}>
+            الرئيسية
+          </Text>
         </View>
         <EmptyState
-          message="Could not load calls dashboard."
-          actionLabel="Retry"
+          message="تعذر تحميل لوحة تحكم المكالمات."
+          actionLabel="إعادة المحاولة"
           onAction={loadCalls}
         />
       </SafeAreaView>
@@ -117,15 +121,17 @@ export default function HomeScreen() {
             colors={[colors.accent]}
           />
         }>
-        {/* 1. Header */}
+        {/* 1. Header - RTL */}
         <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.text }]}>Home</Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            Here&apos;s what&apos;s happening with your calls.
+          <Text style={[styles.title, { color: colors.text, fontFamily: NotoKufiArabic.bold }]}>
+            الرئيسية
+          </Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary, fontFamily: NotoKufiArabic.regular }]}>
+            ملخص وإحصائيات سجل المكالمات والمتابعات.
           </Text>
         </View>
 
-        {/* 2. Stat Row */}
+        {/* 2. Stat Row - RTL */}
         <View style={styles.statRow}>
           <StatCard
             icon={
@@ -136,7 +142,7 @@ export default function HomeScreen() {
               />
             }
             value={callsTodayCount}
-            label="Calls today"
+            label="مكالمات اليوم"
           />
           <StatCard
             icon={
@@ -147,7 +153,7 @@ export default function HomeScreen() {
               />
             }
             value={missedCount}
-            label="Missed"
+            label="لم يتم الرد"
           />
           <StatCard
             icon={
@@ -158,16 +164,18 @@ export default function HomeScreen() {
               />
             }
             value={formatDuration(avgDurationSec)}
-            label="Avg. duration"
+            label="متوسط المدة"
           />
         </View>
 
-        {/* 3. Recent Calls Section */}
+        {/* 3. Recent Calls Section - RTL */}
         <View style={styles.recentSection}>
-          <Text style={[styles.sectionHeading, { color: colors.text }]}>Recent calls</Text>
+          <Text style={[styles.sectionHeading, { color: colors.text, fontFamily: NotoKufiArabic.bold }]}>
+            أحدث المكالمات
+          </Text>
 
           {recentCalls.length === 0 ? (
-            <EmptyState message="No recent calls." />
+            <EmptyState message="لا توجد مكالمات حديثة." />
           ) : (
             <View style={styles.callsList}>
               {recentCalls.map((item) => (
@@ -181,7 +189,7 @@ export default function HomeScreen() {
           )}
 
           <SecondaryButton
-            title="See all calls"
+            title="عرض كافة المكالمات"
             onPress={() => router.push('/calls' as any)}
             style={styles.seeAllBtn}
           />
@@ -203,14 +211,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
     gap: 4,
+    alignItems: 'flex-start',
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: 24,
+    textAlign: 'right',
   },
   subtitle: {
     fontSize: 13,
-    fontWeight: '400',
+    textAlign: 'right',
   },
   center: {
     flex: 1,
@@ -218,7 +227,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   statRow: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     paddingHorizontal: 16,
     gap: 12,
   },
@@ -228,7 +237,6 @@ const styles = StyleSheet.create({
   },
   sectionHeading: {
     fontSize: 18,
-    fontWeight: '700',
     paddingHorizontal: 16,
   },
   callsList: {

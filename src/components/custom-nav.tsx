@@ -19,16 +19,15 @@ export function CustomNav({ state, descriptors, navigation }: any) {
     return null;
   }
 
-  // Exact mapping of allowed tabs in the bottom navigation bar
+  // Exact Arabic mapping of allowed tabs in the bottom navigation bar
   const tabConfigs: Record<
     string,
     { label: string; activeIcon: keyof typeof Ionicons.glyphMap; inactiveIcon: keyof typeof Ionicons.glyphMap }
   > = {
-    index: { label: 'Home', activeIcon: 'home', inactiveIcon: 'home-outline' },
-    calls: { label: 'Calls', activeIcon: 'call', inactiveIcon: 'call-outline' },
-    leads: { label: 'Leads', activeIcon: 'people', inactiveIcon: 'people-outline' },
-    'lead-actions': { label: 'Actions', activeIcon: 'flash', inactiveIcon: 'flash-outline' },
-    profile: { label: 'Profile', activeIcon: 'person', inactiveIcon: 'person-outline' },
+    index: { label: 'الرئيسية', activeIcon: 'home', inactiveIcon: 'home-outline' },
+    calls: { label: 'المكالمات', activeIcon: 'call', inactiveIcon: 'call-outline' },
+    leads: { label: 'المتابعات', activeIcon: 'people', inactiveIcon: 'people-outline' },
+    profile: { label: 'الحساب', activeIcon: 'person', inactiveIcon: 'person-outline' },
   };
 
   return (
@@ -44,7 +43,7 @@ export function CustomNav({ state, descriptors, navigation }: any) {
       {state.routes.map((route: any, index: number) => {
         const config = tabConfigs[route.name];
 
-        // Do NOT render any route that is not explicitly in tabConfigs!
+        // Do NOT render any route that is not explicitly in tabConfigs (removes Actions and any unused route)!
         if (!config) {
           return null;
         }

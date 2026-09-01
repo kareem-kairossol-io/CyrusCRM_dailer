@@ -13,7 +13,7 @@ import { useRouter } from 'expo-router';
 
 import { CallRow } from '@/components/call-row';
 import { EmptyState } from '@/components/empty-state';
-import { Colors } from '@/constants/theme';
+import { Colors, NotoKufiArabic } from '@/constants/theme';
 import { CallLogService, CallRecord } from '@/services/CallLogService';
 
 export default function CallsScreen() {
@@ -32,7 +32,7 @@ export default function CallsScreen() {
       const data = await CallLogService.getCalls();
       setCalls(data);
     } catch (e) {
-      setError('Could not load calls.');
+      setError('تعذر تحميل سجل المكالمات.');
     }
   }, []);
 
@@ -54,7 +54,7 @@ export default function CallsScreen() {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.text }]}>Calls</Text>
+          <Text style={[styles.title, { color: colors.text, fontFamily: NotoKufiArabic.bold }]}>المكالمات</Text>
         </View>
         <View style={styles.center}>
           <ActivityIndicator size="large" color={colors.accent} />
@@ -67,11 +67,11 @@ export default function CallsScreen() {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.text }]}>Calls</Text>
+          <Text style={[styles.title, { color: colors.text, fontFamily: NotoKufiArabic.bold }]}>المكالمات</Text>
         </View>
         <EmptyState
-          message="Could not load calls."
-          actionLabel="Retry"
+          message="تعذر تحميل سجل المكالمات."
+          actionLabel="إعادة المحاولة"
           onAction={loadCalls}
         />
       </SafeAreaView>
@@ -86,7 +86,7 @@ export default function CallsScreen() {
         contentContainerStyle={calls.length === 0 ? styles.emptyContainer : styles.listContent}
         ListHeaderComponent={
           <View style={styles.header}>
-            <Text style={[styles.title, { color: colors.text }]}>Calls</Text>
+            <Text style={[styles.title, { color: colors.text, fontFamily: NotoKufiArabic.bold }]}>المكالمات</Text>
           </View>
         }
         refreshControl={
@@ -97,7 +97,7 @@ export default function CallsScreen() {
             colors={[colors.accent]}
           />
         }
-        ListEmptyComponent={<EmptyState message="No calls yet." />}
+        ListEmptyComponent={<EmptyState message="لا توجد مكالمات مسجلة حتى الآن." />}
         renderItem={({ item }) => (
           <CallRow
             call={item}
@@ -117,10 +117,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 8,
+    alignItems: 'flex-start',
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: 24,
+    textAlign: 'right',
   },
   center: {
     flex: 1,

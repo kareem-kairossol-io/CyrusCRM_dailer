@@ -4,7 +4,7 @@ import { SymbolView } from 'expo-symbols';
 
 import { StatusBadge } from '@/components/status-badge';
 import { UploadStatusBadge } from '@/components/upload-status-badge';
-import { Colors } from '@/constants/theme';
+import { Colors, NotoKufiArabic } from '@/constants/theme';
 import { CallRecord } from '@/services/CallLogService';
 
 export interface CallRowProps {
@@ -67,7 +67,7 @@ export function CallRow({ call, onPress }: CallRowProps) {
       {/* Avatar */}
       <View style={[styles.avatar, { backgroundColor: colors.badgeBackground }]}>
         {initial ? (
-          <Text style={[styles.initialText, { color: colors.accent }]}>{initial}</Text>
+          <Text style={[styles.initialText, { color: colors.accent, fontFamily: NotoKufiArabic.bold }]}>{initial}</Text>
         ) : (
           <SymbolView
             name={{ ios: 'phone.fill', android: 'call', web: 'phone' }}
@@ -77,16 +77,16 @@ export function CallRow({ call, onPress }: CallRowProps) {
         )}
       </View>
 
-      {/* Middle Content */}
+      {/* Middle Content - RTL */}
       <View style={styles.middleContent}>
         <View style={styles.nameHeaderRow}>
-          <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
+          <Text style={[styles.name, { color: colors.text, fontFamily: NotoKufiArabic.bold }]} numberOfLines={1}>
             {nameText}
           </Text>
           {Boolean(call.ref) && (
             <View style={[styles.refTag, { backgroundColor: colors.badgeBackground }]}>
-              <Text style={[styles.refTagText, { color: colors.accent }]}>
-                {call.ref}
+              <Text style={[styles.refTagText, { color: colors.accent, fontFamily: NotoKufiArabic.bold }]}>
+                #{call.ref}
               </Text>
             </View>
           )}
@@ -95,7 +95,7 @@ export function CallRow({ call, onPress }: CallRowProps) {
         <View style={styles.metaRow}>
           <StatusBadge status={call.status} />
           <UploadStatusBadge status={call.uploadStatus} />
-          <Text style={[styles.dateText, { color: colors.textSecondary }]} numberOfLines={1}>
+          <Text style={[styles.dateText, { color: colors.textSecondary, fontFamily: NotoKufiArabic.regular }]} numberOfLines={1}>
             · {formatDate(call.date)}
           </Text>
         </View>
@@ -103,7 +103,7 @@ export function CallRow({ call, onPress }: CallRowProps) {
 
       {/* Right Content: Duration & Direction Arrow */}
       <View style={styles.rightContent}>
-        <Text style={[styles.duration, { color: colors.textSecondary }]}>
+        <Text style={[styles.duration, { color: colors.textSecondary, fontFamily: NotoKufiArabic.medium }]}>
           {formatDuration(call.duration)}
         </Text>
         <SymbolView
@@ -118,7 +118,7 @@ export function CallRow({ call, onPress }: CallRowProps) {
 
 const styles = StyleSheet.create({
   row: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -133,23 +133,23 @@ const styles = StyleSheet.create({
   },
   initialText: {
     fontSize: 16,
-    fontWeight: '700',
   },
   middleContent: {
     flex: 1,
-    marginLeft: 12,
-    marginRight: 8,
+    marginRight: 12,
+    marginLeft: 8,
     gap: 4,
+    alignItems: 'flex-start',
   },
   nameHeaderRow: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     alignItems: 'center',
     gap: 6,
   },
   name: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 14,
     flexShrink: 1,
+    textAlign: 'right',
   },
   refTag: {
     borderRadius: 999,
@@ -158,24 +158,22 @@ const styles = StyleSheet.create({
   },
   refTagText: {
     fontSize: 10,
-    fontWeight: '700',
   },
   metaRow: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     alignItems: 'center',
     gap: 6,
     flexWrap: 'wrap',
   },
   dateText: {
-    fontSize: 13,
-    fontWeight: '400',
+    fontSize: 12,
+    textAlign: 'right',
   },
   rightContent: {
-    alignItems: 'flex-end',
+    alignItems: 'flex-start',
     gap: 4,
   },
   duration: {
     fontSize: 12,
-    fontWeight: '500',
   },
 });

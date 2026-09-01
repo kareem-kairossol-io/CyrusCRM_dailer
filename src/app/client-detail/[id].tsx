@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -11,8 +13,6 @@ import {
   useColorScheme,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { EmptyState } from '@/components/empty-state';
 import { Colors, NotoKufiArabic } from '@/constants/theme';
