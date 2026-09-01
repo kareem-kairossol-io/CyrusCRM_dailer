@@ -46,6 +46,7 @@ object CallUploadPayloadMapper {
         val externalPhone = sanitizePhoneNumber(call.phoneNumber)
         val companyPhone = sanitizePhoneNumber(companyPhoneNumber)
         val contactName = if (call.contactName.isNotBlank() && call.contactName != "Unknown") call.contactName else "غير مسجل"
+        val leadIdVal = (call.ref ?: "").replace("REF-", "").trim()
 
         return mapOf(
             "ContactName" to contactName,
@@ -55,7 +56,7 @@ object CallUploadPayloadMapper {
             "ServiceType" to "0",
             "CallStatus" to callStatus,
             "AudioFile" to "",
-            "LeadId" to (call.ref ?: ""),
+            "LeadId" to leadIdVal,
             "CallType" to callType,
             "CallDateTime" to callDateTimeStr,
             "CompanyPhoneNumber" to companyPhone,

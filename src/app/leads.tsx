@@ -1,155 +1,320 @@
-import React, { useState } from 'react';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { useRouter } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
 import {
-  Alert,
+  ActivityIndicator,
   FlatList,
-  Linking,
   Pressable,
+  RefreshControl,
+  ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
   useColorScheme,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Ionicons from '@expo/vector-icons/Ionicons';
 
-import { Colors } from '@/constants/theme';
-import { CallLogService } from '@/services/CallLogService';
-import { LeadActionService } from '@/services/LeadActionService';
+import { EmptyState } from '@/components/empty-state';
+import { Colors, NotoKufiArabic } from '@/constants/theme';
+import { ClientLeadItem, LeadService, LeadStatus } from '@/services/LeadService';
 
-export interface Lead {
-  id: number;
-  refCode: string;
-  name: string;
-  number: string;
-  status: string;
+function formatDate(isoStr: string | null): string {
+  if (!isoStr) return '-';
+  try {
+    const d = new Date(isoStr);
+    return d.toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  } catch (e) {
+    return isoStr;
+  }
 }
 
-export const DUMMY_LEADS: Lead[] = [
-  {
-    id: 101,
-    refCode: 'REF-8492',
-    name: 'Mohamed Ali',
-    number: '+20 12 25609831',
-    status: 'VIP Lead',
-  },
-  {
-    id: 102,
-    refCode: 'REF-3910',
-    name: 'Sara Ibrahim',
-    number: '01550552371',
-    status: 'New Lead',
-  },
-  {
-    id: 103,
-    refCode: 'REF-5521',
-    name: 'Omar Khaled',
-    number: '0114588203',
-    status: 'Follow Up',
-  },
-  {
-    id: 104,
-    refCode: 'REF-9904',
-    name: 'Sphinx Commercial Co.',
-    number: '+20 12 25609831', // Repeated number with different name & ref
-    status: 'Enterprise',
-  },
-  {
-    id: 105,
-    refCode: 'REF-7128',
-    name: 'Youssef Mahmoud',
-    number: '01550552371', // Repeated number with different name & ref
-    status: 'Hot Lead',
-  },
-];
-
 export default function LeadsScreen() {
+  const router = useRouter();
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
 
-  const [callingId, setCallingId] = useState<number | null>(null);
+  const [statuses, setStatuses] = useState<LeadStatus[]>([]);
+  const [selectedStatus, setSelectedStatus] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [items, setItems] = useState<ClientLeadItem[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
-  const handleCallAndLogAction = async (lead: Lead) => {
-    try {
-      setCallingId(lead.id);
-      // 1. Commit action to SQLite first
-      const rowId = await LeadActionService.createAction(lead.id, lead.number);
-      console.log(`Action #${rowId} logged for lead ID #${lead.id} (${lead.number})`);
-      
-      // 2. Make direct call (triggers direct dial or native Dual-SIM picker)
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Load initial statuses
+  useEffect(() => {
+    (async () => {
       try {
-        await CallLogService.makeDirectCall(lead.number);
-      } catch (directCallErr) {
-        // Fallback to openURL dialer if direct call fails
-        await Linking.openURL(`tel:${lead.number}`);
+        const fetchedStatuses = await LeadService.getStatuses();
+        setStatuses(fetchedStatuses);
+      } catch (e) {
+        console.warn('Failed to load lead statuses:', e);
       }
-    } catch (e) {
-      Alert.alert('Error', 'Failed to place call.');
-    } finally {
-      setCallingId(null);
+    })();
+  }, []);
+
+  // Fetch clients list
+  const loadClients = useCallback(
+    async (pageNum = 1, isRefresh = false) => {
+      try {
+        if (isRefresh) {
+          setRefreshing(true);
+        } else if (pageNum === 1) {
+          setLoading(true);
+        } else {
+          setLoadingMore(true);
+        }
+        setError(null);
+
+        const res = await LeadService.getClients({
+          search: searchQuery,
+          status: selectedStatus,
+          pageNumber: pageNum,
+          pageSize: 20,
+        });
+
+        if (pageNum === 1) {
+          setItems(res.Items || []);
+        } else {
+          setItems((prev) => [...prev, ...(res.Items || [])]);
+        }
+
+        setPage(res.PageNumber);
+        setTotalPages(res.TotalPages);
+        setTotalCount(res.TotalCount);
+      } catch (e: any) {
+        setError(e.message || 'تعذر تحميل بيانات العملاء.');
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+        setLoadingMore(false);
+      }
+    },
+    [searchQuery, selectedStatus]
+  );
+
+  useEffect(() => {
+    loadClients(1);
+  }, [loadClients]);
+
+  const onRefresh = () => {
+    loadClients(1, true);
+  };
+
+  const loadNextPage = () => {
+    if (page < totalPages && !loadingMore && !loading) {
+      loadClients(page + 1);
     }
+  };
+
+  const renderCardItem = (item: ClientLeadItem) => {
+    const { Client: client, Lead: lead } = item;
+
+    return (
+      <Pressable
+        key={client.Id}
+        onPress={() => router.push(`/client-detail/${client.Id}` as any)}
+        style={({ pressed }) => [
+          styles.card,
+          { backgroundColor: colors.backgroundElement, borderColor: colors.border },
+          scheme === 'dark' && { borderWidth: 1 },
+          pressed && { opacity: 0.9 },
+        ]}>
+        {/* Top Header - RTL (Name & Tax Card on right, Status Badge on left) */}
+        <View style={styles.cardHeader}>
+          <View style={styles.clientMeta}>
+            <Text style={[styles.clientName, { color: colors.text, fontFamily: NotoKufiArabic.bold }]} numberOfLines={1}>
+              {client.Name}
+            </Text>
+            <Text style={[styles.taxCard, { color: colors.textSecondary, fontFamily: NotoKufiArabic.regular }]}>
+              تسجيل ضريبي: {client.TaxCard || 'غير مدون'}
+            </Text>
+          </View>
+
+          <View style={[styles.statusBadge, { backgroundColor: colors.badgeBackground }]}>
+            <Text style={[styles.statusBadgeText, { color: colors.accent, fontFamily: NotoKufiArabic.bold }]}>
+              {lead.LeadStatusName || 'جديد'}
+            </Text>
+          </View>
+        </View>
+
+        {/* Details Divider & Grid - RTL */}
+        <View style={[styles.cardDivider, { borderTopColor: colors.border }]} />
+
+        <View style={styles.detailsGrid}>
+          <View style={styles.gridCell}>
+            <Text style={[styles.gridCellLabel, { color: colors.textSecondary, fontFamily: NotoKufiArabic.regular }]}>
+              المنتج:
+            </Text>
+            <Text style={[styles.gridCellVal, { color: colors.text, fontFamily: NotoKufiArabic.semiBold }]} numberOfLines={1}>
+              {lead.ProductName || 'General Service'}
+            </Text>
+          </View>
+
+          <View style={styles.gridCell}>
+            <Text style={[styles.gridCellLabel, { color: colors.textSecondary, fontFamily: NotoKufiArabic.regular }]}>
+              تاريخ المتابعة:
+            </Text>
+            <Text style={[styles.gridCellVal, { color: colors.text, fontFamily: NotoKufiArabic.medium }]}>
+              {formatDate(lead.FollowUpDateTime)}
+            </Text>
+          </View>
+
+          <View style={styles.gridCell}>
+            <Text style={[styles.gridCellLabel, { color: colors.textSecondary, fontFamily: NotoKufiArabic.regular }]}>
+              المسؤول:
+            </Text>
+            <Text style={[styles.gridCellVal, { color: colors.text, fontFamily: NotoKufiArabic.medium }]} numberOfLines={1}>
+              {lead.AssignedUserName || '-'}
+            </Text>
+          </View>
+
+          <View style={styles.gridCell}>
+            <Text style={[styles.gridCellLabel, { color: colors.textSecondary, fontFamily: NotoKufiArabic.regular }]}>
+              المسؤول التقني:
+            </Text>
+            <Text style={[styles.gridCellVal, { color: colors.text, fontFamily: NotoKufiArabic.medium }]} numberOfLines={1}>
+              {lead.TechnicalUserName || '-'}
+            </Text>
+          </View>
+        </View>
+      </Pressable>
+    );
   };
 
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: colors.background }]}>
-      <FlatList
-        data={DUMMY_LEADS}
-        keyExtractor={(item) => String(item.id)}
-        contentContainerStyle={styles.listContent}
-        ListHeaderComponent={
-          <View style={styles.header}>
-            <Text style={[styles.title, { color: colors.text }]}>Leads</Text>
-            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              Tap the call button to place a call and log the action.
-            </Text>
-          </View>
-        }
-        renderItem={({ item }) => {
-          const initial = item.name.charAt(0).toUpperCase();
+      {/* Header Bar - RTL */}
+      <View style={styles.header}>
+        <View style={styles.titleRow}>
+          <Text style={[styles.title, { color: colors.text, fontFamily: NotoKufiArabic.bold }]}>
+            العملاء والمتابعات
+          </Text>
+        </View>
 
-          return (
-            <View
+        {/* Search Bar - RTL */}
+        <View
+          style={[
+            styles.searchContainer,
+            { backgroundColor: colors.backgroundElement, borderColor: colors.border },
+            scheme === 'dark' && { borderWidth: 1 },
+          ]}>
+          <Ionicons name="search" size={20} color={colors.textSecondary} />
+          <TextInput
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="بحث بالاسم أو التسجيل الضريبي أو الهاتف..."
+            placeholderTextColor={colors.textSecondary}
+            style={[styles.searchInput, { color: colors.text, fontFamily: NotoKufiArabic.regular }]}
+            onSubmitEditing={() => loadClients(1)}
+          />
+          {searchQuery.length > 0 && (
+            <Pressable onPress={() => setSearchQuery('')}>
+              <Ionicons name="close-circle" size={18} color={colors.textSecondary} />
+            </Pressable>
+          )}
+        </View>
+
+        {/* Status Filter Horizontal Chips - RTL (Including "الكل") */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.statusChipsContent}>
+          {/* All Chip */}
+          <Pressable
+            onPress={() => setSelectedStatus(null)}
+            style={[
+              styles.chip,
+              selectedStatus === null
+                ? { backgroundColor: colors.accent }
+                : { backgroundColor: colors.backgroundElement, borderColor: colors.border, borderWidth: 1 },
+            ]}>
+            <Text
               style={[
-                styles.card,
-                { backgroundColor: colors.backgroundElement, borderColor: colors.border },
-                scheme === 'dark' && { borderWidth: 1 },
+                styles.chipText,
+                {
+                  color: selectedStatus === null ? '#FFFFFF' : colors.text,
+                  fontFamily: selectedStatus === null ? NotoKufiArabic.bold : NotoKufiArabic.medium,
+                },
               ]}>
-              {/* Left Avatar */}
-              <View style={[styles.avatar, { backgroundColor: colors.badgeBackground }]}>
-                <Text style={[styles.avatarText, { color: colors.accent }]}>{initial}</Text>
-              </View>
+              الكل {selectedStatus === null && totalCount > 0 ? `(${totalCount})` : ''}
+            </Text>
+          </Pressable>
 
-              {/* Middle Lead Info */}
-              <View style={styles.leadMeta}>
-                <View style={styles.nameRow}>
-                  <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
-                    {item.name}
-                  </Text>
-                  <View style={[styles.badge, { backgroundColor: colors.badgeBackground }]}>
-                    <Text style={[styles.badgeText, { color: colors.accent }]}>
-                      {item.status}
-                    </Text>
-                  </View>
-                </View>
-                <Text style={[styles.refText, { color: colors.textSecondary }]}>
-                  ID: #{item.id} • {item.number}
-                </Text>
-              </View>
-
-              {/* Right Side: Circular Call Icon Button (No Shadow) */}
+          {statuses.map((st) => {
+            const isSelected = selectedStatus === st.Value;
+            return (
               <Pressable
-                onPress={() => handleCallAndLogAction(item)}
-                disabled={callingId === item.id}
-                style={({ pressed }) => [
-                  styles.callCircleBtn,
-                  { backgroundColor: colors.accent },
-                  pressed && { opacity: 0.8 },
+                key={st.Value}
+                onPress={() => setSelectedStatus(st.Value)}
+                style={[
+                  styles.chip,
+                  isSelected
+                    ? { backgroundColor: colors.accent }
+                    : { backgroundColor: colors.backgroundElement, borderColor: colors.border, borderWidth: 1 },
                 ]}>
-                <Ionicons name="call" size={18} color="#FFFFFF" />
+                <Text
+                  style={[
+                    styles.chipText,
+                    {
+                      color: isSelected ? '#FFFFFF' : colors.text,
+                      fontFamily: isSelected ? NotoKufiArabic.bold : NotoKufiArabic.medium,
+                    },
+                  ]}>
+                  {st.Name} {isSelected && totalCount > 0 ? `(${totalCount})` : ''}
+                </Text>
               </Pressable>
-            </View>
-          );
-        }}
-      />
+            );
+          })}
+        </ScrollView>
+      </View>
+
+      {/* Main Content List - Cards */}
+      {loading ? (
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color={colors.accent} />
+        </View>
+      ) : error ? (
+        <EmptyState
+          message="تعذر تحميل بيانات العملاء."
+          actionLabel="إعادة المحاولة"
+          onAction={() => loadClients(1)}
+        />
+      ) : items.length === 0 ? (
+        <EmptyState message="لا توجد بيانات عملاء مطابقة للبحث والحالة المحددة." />
+      ) : (
+        <FlatList
+          data={items}
+          keyExtractor={(item) => String(item.Client.Id)}
+          contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={colors.accent}
+              colors={[colors.accent]}
+            />
+          }
+          onEndReached={loadNextPage}
+          onEndReachedThreshold={0.4}
+          ListFooterComponent={
+            loadingMore ? (
+              <ActivityIndicator style={{ marginVertical: 16 }} color={colors.accent} />
+            ) : null
+          }
+          renderItem={({ item }) => renderCardItem(item)}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -158,78 +323,108 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
   },
+  header: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 8,
+    gap: 12,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  title: {
+    fontSize: 24,
+  },
+  searchContainer: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 44,
+    gap: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    textAlign: 'right',
+  },
+  statusChipsContent: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingVertical: 4,
+  },
+  chip: {
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+  },
+  chipText: {
+    fontSize: 13,
+  },
   listContent: {
+    paddingHorizontal: 16,
     paddingBottom: 24,
     gap: 12,
   },
-  header: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 4,
-    gap: 4,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-  },
-  subtitle: {
-    fontSize: 13,
-    fontWeight: '400',
-    marginBottom: 8,
-  },
   card: {
-    marginHorizontal: 16,
     borderRadius: 16,
     padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
     gap: 12,
   },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: {
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  leadMeta: {
-    flex: 1,
-    gap: 4,
-  },
-  nameRow: {
+  cardHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 12,
   },
-  name: {
-    fontSize: 16,
-    fontWeight: '600',
-    flexShrink: 1,
+  clientMeta: {
+    flex: 1,
+    alignItems: 'flex-start',
+    gap: 2,
   },
-  badge: {
-    borderRadius: 999,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+  clientName: {
+    fontSize: 14,
+    textAlign: 'right',
   },
-  badgeText: {
+  taxCard: {
+    fontSize: 12,
+    textAlign: 'right',
+  },
+  cardDivider: {
+    borderTopWidth: 1,
+  },
+  detailsGrid: {
+    flexDirection: 'row-reverse',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  gridCell: {
+    width: '46%',
+    gap: 2,
+    alignItems: 'flex-start',
+  },
+  gridCellLabel: {
     fontSize: 11,
-    fontWeight: '600',
+    textAlign: 'right',
   },
-  refText: {
+  gridCellVal: {
     fontSize: 13,
-    fontWeight: '400',
+    textAlign: 'right',
   },
-  callCircleBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  statusBadge: {
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    alignSelf: 'center',
+  },
+  statusBadgeText: {
+    fontSize: 8,
+  },
+  center: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 0,
-    shadowOpacity: 0,
   },
 });

@@ -26,7 +26,7 @@ class CallActionLinker(private val context: Context) {
      * Tries to find a lead action matching [phoneNumber] within the call time interval:
      * [callStartTime - BUFFER_MS] to [(callStartTime + durationMs) + BUFFER_MS].
      * Maximum interval allowed is 5 minutes (300,000 ms).
-     * Returns the matched lead's reference code string (e.g. "REF-101"), or null if no match.
+     * Returns the matched lead's ID string (e.g. "4715"), or null if no match.
      */
     fun findMatchingRef(phoneNumber: String, callStartTime: Long, durationSeconds: Long): String? {
         return try {
@@ -48,7 +48,7 @@ class CallActionLinker(private val context: Context) {
                 isPhoneMatch && isTimeMatch
             }
 
-            matchedAction?.let { "REF-${it.leadId}" }
+            matchedAction?.let { it.leadId.toString() }
         } catch (e: Exception) {
             Log.e(TAG, "Error looking up matching lead action", e)
             null

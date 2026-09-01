@@ -35,21 +35,33 @@ export const Colors = {
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 
+export const NotoKufiArabic = {
+  thin: 'NotoKufiArabic-Thin',
+  extraLight: 'NotoKufiArabic-ExtraLight',
+  light: 'NotoKufiArabic-Light',
+  regular: 'NotoKufiArabic-Regular',
+  medium: 'NotoKufiArabic-Medium',
+  semiBold: 'NotoKufiArabic-SemiBold',
+  bold: 'NotoKufiArabic-Bold',
+  extraBold: 'NotoKufiArabic-ExtraBold',
+  black: 'NotoKufiArabic-Black',
+} as const;
+
 export const Fonts = Platform.select({
   ios: {
-    sans: 'system-ui',
+    sans: NotoKufiArabic.regular,
     serif: 'ui-serif',
     rounded: 'ui-rounded',
     mono: 'ui-monospace',
   },
   default: {
-    sans: 'normal',
+    sans: NotoKufiArabic.regular,
     serif: 'serif',
     rounded: 'normal',
     mono: 'monospace',
   },
   web: {
-    sans: 'var(--font-display)',
+    sans: NotoKufiArabic.regular,
     serif: 'var(--font-serif)',
     rounded: 'var(--font-rounded)',
     mono: 'var(--font-mono)',

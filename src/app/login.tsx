@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -12,9 +13,8 @@ import {
   useColorScheme,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Ionicons from '@expo/vector-icons/Ionicons';
 
-import { Colors } from '@/constants/theme';
+import { Colors, NotoKufiArabic } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 
 export default function LoginScreen() {
@@ -30,11 +30,11 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!usernameOrEmail.trim()) {
-      setErrorMessage('Please enter your username or email');
+      setErrorMessage('برجاء إدخال اسم المستخدم أو البريد الإلكتروني');
       return;
     }
     if (!password) {
-      setErrorMessage('Please enter your password');
+      setErrorMessage('برجاء إدخال كلمة المرور');
       return;
     }
 
@@ -44,7 +44,7 @@ export default function LoginScreen() {
       await login(usernameOrEmail.trim(), password);
     } catch (e: any) {
       console.error('Login error:', e);
-      setErrorMessage(e.message || 'Login failed. Please check your credentials.');
+      setErrorMessage(e.message || 'فشل تسجيل الدخول. برجاء التحقق من صحة البيانات.');
     } finally {
       setLoading(false);
     }
@@ -61,9 +61,11 @@ export default function LoginScreen() {
             <View style={[styles.logoBadge, { backgroundColor: colors.accent + '15' }]}>
               <Ionicons name="shield-checkmark" size={48} color={colors.accent} />
             </View>
-            <Text style={[styles.title, { color: colors.text }]}>Cyrus CRM</Text>
-            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              Sign in to manage calls, leads, and mobile sync
+            <Text style={[styles.title, { color: colors.text, fontFamily: NotoKufiArabic.bold }]}>
+              Cyrus CRM
+            </Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary, fontFamily: NotoKufiArabic.regular }]}>
+              قم بتسجيل الدخول لإدارة المكالمات والعملاء والمزامنة
             </Text>
           </View>
 
@@ -74,19 +76,25 @@ export default function LoginScreen() {
               { backgroundColor: colors.backgroundElement, borderColor: colors.border },
               scheme === 'dark' && { borderWidth: 1 },
             ]}>
-            <Text style={[styles.cardTitle, { color: colors.text }]}>Sign In</Text>
+            <Text style={[styles.cardTitle, { color: colors.text, fontFamily: NotoKufiArabic.bold }]}>
+              تسجيل الدخول
+            </Text>
 
             {/* Error Banner */}
             {errorMessage ? (
               <View style={[styles.errorBanner, { backgroundColor: colors.danger + '15' }]}>
                 <Ionicons name="alert-circle" size={20} color={colors.danger} />
-                <Text style={[styles.errorText, { color: colors.danger }]}>{errorMessage}</Text>
+                <Text style={[styles.errorText, { color: colors.danger, fontFamily: NotoKufiArabic.medium }]}>
+                  {errorMessage}
+                </Text>
               </View>
             ) : null}
 
             {/* Username/Email Input */}
             <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.text }]}>Username or Email</Text>
+              <Text style={[styles.label, { color: colors.text, fontFamily: NotoKufiArabic.semiBold }]}>
+                اسم المستخدم أو البريد الإلكتروني
+              </Text>
               <View
                 style={[
                   styles.inputWrapper,
@@ -94,8 +102,8 @@ export default function LoginScreen() {
                 ]}>
                 <Ionicons name="person-outline" size={20} color={colors.textSecondary} />
                 <TextInput
-                  style={[styles.input, { color: colors.text }]}
-                  placeholder="e.g. Karen@cyrustecheg.com"
+                  style={[styles.input, { color: colors.text, fontFamily: NotoKufiArabic.regular }]}
+                  placeholder="مثال: email@cyrustecheg.com"
                   placeholderTextColor={colors.textSecondary + '80'}
                   autoCapitalize="none"
                   keyboardType="email-address"
@@ -108,7 +116,9 @@ export default function LoginScreen() {
 
             {/* Password Input */}
             <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.text }]}>Password</Text>
+              <Text style={[styles.label, { color: colors.text, fontFamily: NotoKufiArabic.semiBold }]}>
+                كلمة المرور
+              </Text>
               <View
                 style={[
                   styles.inputWrapper,
@@ -116,8 +126,8 @@ export default function LoginScreen() {
                 ]}>
                 <Ionicons name="lock-closed-outline" size={20} color={colors.textSecondary} />
                 <TextInput
-                  style={[styles.input, { color: colors.text }]}
-                  placeholder="Enter your password"
+                  style={[styles.input, { color: colors.text, fontFamily: NotoKufiArabic.regular }]}
+                  placeholder="أدخل كلمة المرور"
                   placeholderTextColor={colors.textSecondary + '80'}
                   secureTextEntry={!showPassword}
                   value={password}
@@ -146,7 +156,9 @@ export default function LoginScreen() {
               {loading ? (
                 <ActivityIndicator color="#FFFFFF" />
               ) : (
-                <Text style={styles.buttonText}>Log In</Text>
+                <Text style={[styles.buttonText, { fontFamily: NotoKufiArabic.bold }]}>
+                  تسجيل الدخول
+                </Text>
               )}
             </TouchableOpacity>
           </View>
@@ -184,7 +196,6 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32,
-    fontWeight: '800',
     textAlign: 'center',
   },
   subtitle: {
@@ -199,7 +210,6 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 20,
-    fontWeight: '700',
   },
   errorBanner: {
     flexDirection: 'row',
@@ -210,15 +220,16 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 13,
-    fontWeight: '500',
     flex: 1,
+    textAlign: 'right',
   },
   inputGroup: {
     gap: 6,
+    alignItems: 'flex-start',
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
+    textAlign: 'right',
   },
   inputWrapper: {
     flexDirection: 'row',
@@ -231,7 +242,8 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 14,
+    textAlign: 'right',
   },
   button: {
     height: 50,
@@ -243,6 +255,5 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '700',
   },
 });

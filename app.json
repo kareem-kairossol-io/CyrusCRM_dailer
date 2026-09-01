@@ -34,6 +34,22 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
+      ],
+      [
+        "expo-font",
+        {
+          "fonts": [
+            "./assets/fonts/NotoKufiArabic-Black.ttf",
+            "./assets/fonts/NotoKufiArabic-Bold.ttf",
+            "./assets/fonts/NotoKufiArabic-ExtraBold.ttf",
+            "./assets/fonts/NotoKufiArabic-ExtraLight.ttf",
+            "./assets/fonts/NotoKufiArabic-Light.ttf",
+            "./assets/fonts/NotoKufiArabic-Medium.ttf",
+            "./assets/fonts/NotoKufiArabic-Regular.ttf",
+            "./assets/fonts/NotoKufiArabic-SemiBold.ttf",
+            "./assets/fonts/NotoKufiArabic-Thin.ttf"
+          ]
+        }
       ]
     ],
     "experiments": {
