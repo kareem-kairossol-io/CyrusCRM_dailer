@@ -85,16 +85,18 @@ class CallUploadService(private val context: Context) {
                 Log.w(TAG, "Call id=${call.id} has recordingPath=${call.recordingPath} but file does not exist on disk.")
             }
 
-            // 5. Post metadata JSON to backend endpoint
+            // 5. Post form-data to backend endpoint /api/mobile/calls/log
             val updatedCall = call.copy(
                 recordingPath = recordingPathToSend,
                 googleDriveFileId = driveFileId,
                 googleDriveFileUrl = driveFileUrl
             )
-            val payload = CallUploadPayloadMapper.toJson(updatedCall)
-            Log.d(TAG, "Posting call metadata to backend for call id=${call.id}: $payload")
+            val appToken: String = authRepository.getToken() ?: ""
+            val companyPhone = getCompanyPhoneNumber(context)
+            val formData = CallUploadPayloadMapper.toFormDataMap(updatedCall, companyPhone)
+            Log.d(TAG, "Posting call log form-data to backend for call id=${call.id}: $formData")
 
-            val success = apiClient.post(payload)
+            val success = apiClient.postCallLogFormData(formData, appToken)
             val newStatus = if (success) UploadStatus.UPLOADED else UploadStatus.FAILED
             repository.updateUploadStatus(call.id, newStatus)
             Log.d(TAG, "Call id=${call.id} upload final result=$newStatus")
@@ -104,6 +106,27 @@ class CallUploadService(private val context: Context) {
             repository.updateUploadStatus(call.id, UploadStatus.FAILED)
             false
         }
+    }
+
+    private fun getCompanyPhoneNumber(context: Context): String {
+        val prefs = context.getSharedPreferences("cyrus_sync_state", Context.MODE_PRIVATE)
+        val savedPhone = prefs.getString("company_phone_number", null)
+        if (!savedPhone.isNullOrBlank()) {
+            return savedPhone
+        }
+
+        try {
+            val subManager = context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as? android.telephony.SubscriptionManager
+            val infoList = subManager?.activeSubscriptionInfoList
+            val simNumber = infoList?.firstOrNull()?.number
+            if (!simNumber.isNullOrBlank()) {
+                return simNumber
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Unable to read SIM line number from SubscriptionManager: ${e.message}")
+        }
+
+        return "01004992322"
     }
 
     /**

@@ -13,7 +13,7 @@ class CallUploadApiClient {
     companion object {
         private const val TAG = "CyrusCallUploadApiClient"
         private const val BASE_URL = "http://69.169.103.92:9000"
-        private const val DATA_ENDPOINT = "http://82.29.168.80:3000/api/data"
+        private const val DATA_ENDPOINT = "$BASE_URL/api/mobile/calls/log"
         private const val DRIVE_TOKEN_ENDPOINT = "$BASE_URL/api/mobile/drive/token"
         private const val GOOGLE_DRIVE_UPLOAD_ENDPOINT = "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart"
         private const val CONNECT_TIMEOUT_MS = 15_000
@@ -204,27 +204,51 @@ class CallUploadApiClient {
     }
 
     /**
-     * Posts call JSON metadata to [DATA_ENDPOINT].
+     * Posts call log data as multipart/form-data to [DATA_ENDPOINT] (http://69.169.103.92:9000/api/mobile/calls/log).
      * Returns true only on HTTP 2xx AND backend JSON success != false.
      */
-    fun post(payload: JSONObject): Boolean {
+    fun postCallLogFormData(formData: Map<String, String>, appAccessToken: String = ""): Boolean {
         var connection: HttpURLConnection? = null
+        val boundary = "---CyrusFormBoundary" + System.currentTimeMillis()
+        val lineEnd = "\r\n"
+        val twoHyphens = "--"
+
         return try {
             connection = (URL(DATA_ENDPOINT).openConnection() as HttpURLConnection).apply {
                 requestMethod = "POST"
                 doOutput = true
                 doInput = true
+                useCaches = false
                 connectTimeout = CONNECT_TIMEOUT_MS
                 readTimeout = READ_TIMEOUT_MS
-                setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                setRequestProperty("Accept", "*/*")
+                setRequestProperty("Content-Type", "multipart/form-data; boundary=$boundary")
                 setRequestProperty("User-Agent", "Android/CyrusCRM")
+                if (appAccessToken.isNotBlank()) {
+                    setRequestProperty("Authorization", "Bearer ${appAccessToken.trim()}")
+                }
             }
-            connection.outputStream.use { it.write(payload.toString().toByteArray(Charsets.UTF_8)) }
+
+            connection.outputStream.use { os ->
+                for ((key, value) in formData) {
+                    val partHeader = StringBuilder()
+                        .append(twoHyphens).append(boundary).append(lineEnd)
+                        .append("Content-Disposition: form-data; name=\"").append(key).append("\"").append(lineEnd)
+                        .append(lineEnd)
+                        .append(value).append(lineEnd)
+                        .toString()
+                    os.write(partHeader.toByteArray(Charsets.UTF_8))
+                }
+
+                val footer = twoHyphens + boundary + twoHyphens + lineEnd
+                os.write(footer.toByteArray(Charsets.UTF_8))
+                os.flush()
+            }
 
             val code = connection.responseCode
             val stream = if (code in 200..299) connection.inputStream else connection.errorStream
             val responseText = stream?.bufferedReader()?.use { it.readText() } ?: ""
-            Log.d(TAG, "Post call data HTTP $code, payload id=${payload.optLong("id")}, response: $responseText")
+            Log.d(TAG, "Post call log form-data HTTP $code to $DATA_ENDPOINT, response: $responseText")
 
             val httpSuccess = code in 200..299
             var backendSuccess = httpSuccess
@@ -232,7 +256,9 @@ class CallUploadApiClient {
                 try {
                     val json = JSONObject(responseText)
                     if (json.has("success")) {
-                        backendSuccess = json.optBoolean("success", false)
+                        backendSuccess = json.optBoolean("success", true)
+                    } else if (json.has("Success")) {
+                        backendSuccess = json.optBoolean("Success", true)
                     }
                 } catch (e: Exception) {
                     Log.w(TAG, "Failed to parse call data response JSON", e)
@@ -241,11 +267,11 @@ class CallUploadApiClient {
 
             val finalSuccess = httpSuccess && backendSuccess
             if (!finalSuccess) {
-                Log.e(TAG, "Upload call data failed: HTTP $code, backendSuccess=$backendSuccess for payload id=${payload.optLong("id")}")
+                Log.e(TAG, "Upload call log form-data failed: HTTP $code, backendSuccess=$backendSuccess")
             }
             finalSuccess
         } catch (e: Exception) {
-            Log.e(TAG, "Upload error for payload id=${payload.optLong("id")}", e)
+            Log.e(TAG, "Upload call log form-data error", e)
             false
         } finally {
             connection?.disconnect()
